@@ -19,7 +19,7 @@
 .manager{position:fixed;inset:0;z-index:70;background:var(--bg);overflow:auto;padding-bottom:90px;display:none}.manager.show{display:block}
 .managerHead{position:sticky;top:0;z-index:2;background:#0d1016;border-bottom:1px solid var(--line);padding:12px;display:flex;gap:10px;align-items:center}
 .managerBody{max-width:620px;margin:auto;padding:12px}.miniimg{width:64px;height:90px;object-fit:contain;border-radius:8px;background:#080a0e}
-.listingCard{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:#11161d}.platforms{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fulfillCard{border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:8px;background:#11161d}.timeline{border-left:2px solid #30394a;margin:10px 0 0 5px;padding-left:12px}.event{margin:0 0 9px}.event b{display:block;font-size:12px}.status.sold{background:#35264a;color:#d9c2ff}.status.hold{background:#34291e;color:#ffc992}
+.listingCard{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:#11161d}.platforms{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fulfillCard{border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:8px;background:#11161d}.timeline{border-left:2px solid #30394a;margin:10px 0 0 5px;padding-left:12px}.event{margin:0 0 9px}.event b{display:block;font-size:12px}.status.sold{background:#35264a;color:#d9c2ff}.status.hold{background:#34291e;color:#ffc992}.metricGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.metric{background:#11161d;border:1px solid var(--line);border-radius:12px;padding:10px}.metric b{display:block;font-size:18px}.miniFields{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.miniFields .field{margin:0}.exportGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .pricegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pricebox{background:#11161d;padding:10px;border-radius:10px}.pricebox b{display:block;font-size:16px}
 .clickable{cursor:pointer}.clickable:active{opacity:.7}
 
@@ -48,12 +48,12 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
 .field input,.field select{min-height:45px}.bottom{background:#0c0f14eb;backdrop-filter:blur(18px)}.nav{min-height:54px}.nav span{font-size:20px;margin-bottom:2px}.nav.active{color:var(--accent2)}
 .badgeDot{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;background:#293449;color:#dbe5ff;border-radius:99px;font-size:10px;margin-left:3px}
 .kicker{font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:12px}.dangerText{color:#ff9ba6}
-@media(max-width:430px){.quickrow{grid-template-columns:repeat(2,1fr)}.pricegrid{grid-template-columns:1fr}.actionGrid{grid-template-columns:1fr}}
+@media(max-width:430px){.quickrow{grid-template-columns:repeat(2,1fr)}.pricegrid{grid-template-columns:1fr}.actionGrid{grid-template-columns:1fr}.exportGrid{grid-template-columns:1fr}.miniFields{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
-<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.2</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
+<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.3</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
 <main class="content">
 <section id="home" class="section active">
   <div class="hero"><div class="eyebrow">Workspace</div><h1>Turn scans into sellable inventory.</h1><p>Capture, identify, review, price and stage listings without losing track of where anything is.</p></div>
@@ -70,6 +70,25 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
     <button class="btn ghost" onclick="go('images')">Identify cards</button>
     <button class="btn ghost" onclick="go('drafts')">Review matches</button>
     <button class="btn ghost" onclick="go('inventory')">Manage inventory</button>
+  </div>
+  <div class="card">
+    <div class="row space"><div><h3>Money</h3><div class="tiny muted">Sales, fees, shipping, cost basis and exports.</div></div><span id="financeCount" class="status"></span></div>
+    <div id="financeMetrics" class="metricGrid" style="margin-top:10px"></div>
+    <details style="margin-top:10px">
+      <summary class="tiny muted">Bookkeeping defaults</summary>
+      <div class="miniFields" style="margin-top:9px">
+        <div class="field"><label>SALES TAX %</label><input id="fTaxRate" type="number" step=".01" onchange="saveFinanceSettings()"></div>
+        <div class="field"><label>PLATFORM FEE %</label><input id="fFeeRate" type="number" step=".01" onchange="saveFinanceSettings()"></div>
+        <div class="field"><label>PLATFORM FIXED FEE</label><input id="fFeeFixed" type="number" step=".01" onchange="saveFinanceSettings()"></div>
+        <div class="field"><label>PACKAGING DEFAULT</label><input id="fPackDefault" type="number" step=".01" onchange="saveFinanceSettings()"></div>
+        <div class="field"><label>STARTING CASH</label><input id="fStartingCash" type="number" step=".01" onchange="saveFinanceSettings()"></div>
+      </div>
+    </details>
+    <div class="exportGrid">
+      <button class="btn ghost" onclick="exportCsv('sales')">Export sales</button>
+      <button class="btn ghost" onclick="exportCsv('orders')">Export orders</button>
+      <button class="btn ghost" onclick="exportCsv('inventory')">Export inventory</button>
+    </div>
   </div>
   <div id="fulfillmentPanel" class="card">
     <div class="row space"><div><h3>Orders & shipping</h3><div class="tiny muted">Simulated sales, reservations and cross-platform delisting.</div></div><span id="fulfillCount" class="status"></span></div>
@@ -161,6 +180,16 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
       <div class="field"><label>CONDITION</label><select id="mCondition"><option>Near Mint</option><option>Lightly Played</option><option>Moderately Played</option><option>Heavily Played</option><option>Damaged</option><option>Graded</option></select></div>
       <div class="field"><label>NOTES</label><input id="mNotes"></div>
     </div>
+    <div class="card"><h3>Shipping specs</h3>
+      <div class="miniFields">
+        <div class="field"><label>WEIGHT OZ</label><input id="mWeightOz" type="number" step=".1"></div>
+        <div class="field"><label>LENGTH IN</label><input id="mLengthIn" type="number" step=".1"></div>
+        <div class="field"><label>WIDTH IN</label><input id="mWidthIn" type="number" step=".1"></div>
+        <div class="field"><label>HEIGHT IN</label><input id="mHeightIn" type="number" step=".1"></div>
+        <div class="field"><label>PACKAGING COST</label><input id="mPackagingCost" type="number" step=".01"></div>
+        <div class="field"><label>HANDLING MINUTES</label><input id="mHandlingMinutes" type="number" step="1"></div>
+      </div>
+    </div>
 
     <div class="card"><div class="row space"><h3>Market Intelligence</h3><button class="btn ghost" onclick="marketLookupManager()">Lookup</button></div>
       <div id="mMarkets" class="muted tiny">No lookup yet.</div>
@@ -194,8 +223,9 @@ const REAL_BACK='https://i.ebayimg.com/images/g/wRMAAeSw6QBpvsWE/s-l960.png';
 let state=JSON.parse(localStorage.getItem(STORE)||'{"images":[],"drafts":[],"inventory":[]}');
 state.images=state.images||[];state.drafts=state.drafts||[];state.inventory=state.inventory||[];
 state.sales=state.sales||[];state.orders=state.orders||[];state.reservations=state.reservations||[];
+state.financeSettings=state.financeSettings||{salesTaxRate:0,platformFeeRate:13.25,platformFeeFixed:.30,defaultPackagingCost:.25,startingCash:0};
 let aiConfigured=false;
-function save(){localStorage.setItem(STORE,JSON.stringify(state));stats();renderFulfillment()}
+function save(){localStorage.setItem(STORE,JSON.stringify(state));stats();renderFulfillment();renderFinance()}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900)}
 function go(id){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('[data-target]').forEach(x=>x.classList.toggle('active',x.dataset.target===id));if(id==='images')renderImages();if(id==='drafts')renderDraft();if(id==='inventory')renderInventory();if(id==='home'){stats();renderFulfillment()}}
 document.querySelectorAll('[data-target]').forEach(b=>b.onclick=()=>go(b.dataset.target));
@@ -381,6 +411,84 @@ function money(v,currency='USD'){
  try{return new Intl.NumberFormat('en-US',{style:'currency',currency}).format(n)}
  catch{return `$${n.toFixed(2)}`}
 }
+function num(v){const n=Number(v);return Number.isFinite(n)?n:0}
+function shippingCollected(profile){
+ const m=String(profile||'').match(/\$([0-9]+(?:\.[0-9]+)?)/);
+ return m?Number(m[1]):0;
+}
+function defaultWeight(c){return c?.condition==='Graded'?6:1.2}
+function ensureItemShipping(c){
+ c.weightOz=c.weightOz??defaultWeight(c);
+ c.lengthIn=c.lengthIn??(c.condition==='Graded'?5.5:3.5);
+ c.widthIn=c.widthIn??(c.condition==='Graded'?3.5:2.6);
+ c.heightIn=c.heightIn??(c.condition==='Graded'?0.4:0.1);
+ c.packagingCost=c.packagingCost??state.financeSettings.defaultPackagingCost;
+ c.handlingMinutes=c.handlingMinutes??3;
+}
+function estimateShipPaid(order){
+ const weight=num(order.totalWeightOz);
+ if(order.packageType==='Plain white envelope')return 1.25;
+ if(weight<=8)return 4.99;
+ if(weight<=16)return 5.99;
+ return 8.99;
+}
+function packageRecommendation(order){
+ const items=order.items||[],count=items.length,value=items.reduce((s,it)=>s+num(it.price),0),weight=items.reduce((s,it)=>s+num(it.weightOz||1.2),0);
+ const maxL=Math.max(0,...items.map(it=>num(it.lengthIn))),maxW=Math.max(0,...items.map(it=>num(it.widthIn))),maxH=Math.max(0,...items.map(it=>num(it.heightIn)));
+ if(count===1&&weight<=1.5&&value<20&&String(order.shippingProfile||'').includes('PWE'))return {name:'PWE with semi-rigid holder',box:'Envelope 4.125 x 9.5 in',weightOz:weight};
+ if(count<=4&&weight<=8)return {name:'Rigid mailer / BMWT',box:'6 x 4 x 1 in mailer',weightOz:Math.max(weight,4)};
+ if(count<=12&&weight<=16)return {name:'Small card box',box:'6 x 4 x 2 in box',weightOz:Math.max(weight,8)};
+ return {name:'Protected box shipment',box:`${Math.max(6,Math.ceil(maxL)+2)} x ${Math.max(4,Math.ceil(maxW)+2)} x ${Math.max(2,Math.ceil(maxH*count)+1)} in box`,weightOz:Math.max(weight,16)};
+}
+function recalcOrder(order){
+ const settings=state.financeSettings;
+ const itemTotal=(order.items||[]).reduce((s,it)=>s+num(it.price),0);
+ const costBasis=(order.items||[]).reduce((s,it)=>s+num(it.costBasis),0);
+ const packaging=(order.items||[]).reduce((s,it)=>s+num(it.packagingCost),0)||num(settings.defaultPackagingCost);
+ const shipCollected=order.shippingCollected??shippingCollected(order.shippingProfile);
+ const taxable=itemTotal+shipCollected;
+ const tax=order.salesTaxCollected??+(taxable*num(settings.salesTaxRate)/100).toFixed(2);
+ const gross=itemTotal+shipCollected+tax;
+ const fee=order.platformFee??+(gross*num(settings.platformFeeRate)/100+num(settings.platformFeeFixed)).toFixed(2);
+ const rec=packageRecommendation(order);
+ order.recommendedPackage=rec.name;order.recommendedBox=rec.box;order.totalWeightOz=rec.weightOz;
+ order.itemTotal=itemTotal;order.costBasis=costBasis;order.shippingCollected=shipCollected;order.salesTaxCollected=tax;order.platformFee=fee;
+ order.packagingCost=order.packagingCost??+packaging.toFixed(2);
+ order.shippingPaid=order.shippingPaid??estimateShipPaid(order);
+ order.netIncome=+(itemTotal+shipCollected-num(order.platformFee)-num(order.shippingPaid)-num(order.packagingCost)-costBasis).toFixed(2);
+ order.taxLiability=+num(order.salesTaxCollected).toFixed(2);
+ return order;
+}
+function financeSummary(){
+ (state.orders||[]).forEach(recalcOrder);
+ const sold=(state.orders||[]).filter(o=>!['Canceled','Bundled'].includes(o.status));
+ const shipped=sold.filter(o=>o.status==='Shipped');
+ const pending=sold.filter(o=>o.status!=='Shipped');
+ const gross=sold.reduce((s,o)=>s+num(o.itemTotal)+num(o.shippingCollected),0);
+ const realizedGross=shipped.reduce((s,o)=>s+num(o.itemTotal)+num(o.shippingCollected),0);
+ const tax=shipped.reduce((s,o)=>s+num(o.salesTaxCollected),0);
+ const fees=shipped.reduce((s,o)=>s+num(o.platformFee),0);
+ const ship=shipped.reduce((s,o)=>s+num(o.shippingPaid),0);
+ const pack=shipped.reduce((s,o)=>s+num(o.packagingCost),0);
+ const cogs=shipped.reduce((s,o)=>s+num(o.costBasis),0);
+ const net=shipped.reduce((s,o)=>s+num(o.netIncome),0);
+ const inventoryValue=state.inventory.filter(c=>itemStatus(c)==='Available').reduce((s,c)=>s+cardValueNumber(c)*num(c.quantity||1),0);
+ const inventoryCost=state.inventory.filter(c=>itemStatus(c)==='Available').reduce((s,c)=>s+num(c.cost)*num(c.quantity||1),0);
+ const cashOnHand=num(state.financeSettings.startingCash)+net;
+ return {sold:sold.length,shipped:shipped.length,pending:pending.length,gross,realizedGross,tax,fees,ship,pack,cogs,net,avg:shipped.length?realizedGross/shipped.length:0,inventoryValue,inventoryCost,cashOnHand};
+}
+function renderFinance(){
+ const wrap=document.getElementById('financeMetrics'),count=document.getElementById('financeCount');
+ if(!wrap)return;
+ const f=state.financeSettings,s=financeSummary();
+ if(document.getElementById('fTaxRate')){fTaxRate.value=f.salesTaxRate;fFeeRate.value=f.platformFeeRate;fFeeFixed.value=f.platformFeeFixed;fPackDefault.value=f.defaultPackagingCost;fStartingCash.value=f.startingCash||0}
+ if(count)count.textContent=`${s.shipped}/${s.sold} shipped`;
+ wrap.innerHTML=`<div class="metric"><span class="tiny muted">Cash on hand</span><b>${money(s.cashOnHand)}</b></div><div class="metric"><span class="tiny muted">Inventory value</span><b>${money(s.inventoryValue)}</b></div><div class="metric"><span class="tiny muted">Realized receipts</span><b>${money(s.realizedGross)}</b></div><div class="metric"><span class="tiny muted">Realized net income</span><b>${money(s.net)}</b></div><div class="metric"><span class="tiny muted">Pending order value</span><b>${money(s.gross-s.realizedGross)}</b></div><div class="metric"><span class="tiny muted">Sales tax collected</span><b>${money(s.tax)}</b></div><div class="metric"><span class="tiny muted">Shipping paid</span><b>${money(s.ship)}</b></div><div class="metric"><span class="tiny muted">Fees + COGS</span><b>${money(s.fees+s.cogs)}</b></div>`;
+}
+function saveFinanceSettings(){
+ state.financeSettings={salesTaxRate:num(fTaxRate.value),platformFeeRate:num(fFeeRate.value),platformFeeFixed:num(fFeeFixed.value),defaultPackagingCost:num(fPackDefault.value),startingCash:num(fStartingCash.value)};
+ save();toast('Bookkeeping defaults saved');
+}
 function marketsHtml(p){
  if(!p)return 'No lookup yet.';
  if(p.error)return `<span style="color:#ff9aa5">${esc(p.error)}</span>`;
@@ -457,6 +565,11 @@ function cardDisplayValue(c){
  const p=c.pricing?.pokemonPriceTracker?.card?.prices?.market??c.pricing?.pokemonPriceTracker?.card?.marketPrice;
  const v=t??p;return v!=null?money(v,'USD'):'Price not loaded';
 }
+function cardValueNumber(c){
+ const t=c.pricing?.tcgdex?.bestVariant?.marketPrice;
+ const p=c.pricing?.pokemonPriceTracker?.card?.prices?.market??c.pricing?.pokemonPriceTracker?.card?.marketPrice;
+ return num(t??p??c.ask??c.cost);
+}
 function renderInventory(){
  const q=(document.getElementById('invSearch')?.value||'').toLowerCase().trim();
  let rows=state.inventory.map((c,idx)=>({c,idx})).filter(({c})=>{
@@ -485,11 +598,13 @@ function openManager(idx){
  managerIndex=idx;const c=state.inventory[idx];if(!c)return;
  c.quantity=c.quantity||1;c.location=c.location||'';c.cost=c.cost??'';c.condition=c.condition||'Near Mint';c.notes=c.notes||'';
  c.ask=c.ask??'';c.shipping=c.shipping||'PWE - $1.25';c.listings=c.listings||[];
+ ensureItemShipping(c);
  const i=c.identification;
  mHeading.textContent='Manage Inventory';
  mSub.textContent=c.sku||'';
  mFront.src=c.front;mBack.src=c.back;mName.textContent=i.name;mMeta.textContent=`${i.set_name} • ${i.collector_number} • ${i.variant||''}`;
  mSku.value=c.sku||'';mGroup.value=c.group||'Raw Singles';mLocation.value=c.location;mQty.value=c.quantity;mCost.value=c.cost;mCondition.value=c.condition;mNotes.value=c.notes;
+ mWeightOz.value=c.weightOz;mLengthIn.value=c.lengthIn;mWidthIn.value=c.widthIn;mHeightIn.value=c.heightIn;mPackagingCost.value=c.packagingCost;mHandlingMinutes.value=c.handlingMinutes;
  mTitle.value=c.listingTitle||`${i.name} ${i.collector_number} ${i.set_name} Pokemon Card ${i.variant||''}`.replace(/\s+/g,' ').trim();
  mDesc.value=c.listingDescription||`Front and back images shown. Condition: ${c.condition}. Please review images for exact condition.`;
  mAsk.value=c.ask;mShipping.value=c.shipping;mEbay.checked=c.ebay!==false;mTcg.checked=c.tcg!==false;
@@ -499,9 +614,10 @@ function closeManager(){manager.classList.remove('show');managerIndex=-1;renderI
 function saveManager(){
  const c=state.inventory[managerIndex];if(!c)return;
  c.sku=mSku.value;c.group=mGroup.value;c.location=mLocation.value;c.quantity=+mQty.value||1;c.cost=mCost.value;c.condition=mCondition.value;c.notes=mNotes.value;
+ c.weightOz=num(mWeightOz.value);c.lengthIn=num(mLengthIn.value);c.widthIn=num(mWidthIn.value);c.heightIn=num(mHeightIn.value);c.packagingCost=num(mPackagingCost.value);c.handlingMinutes=num(mHandlingMinutes.value);
  c.listingTitle=mTitle.value;c.listingDescription=mDesc.value;c.ask=mAsk.value;c.shipping=mShipping.value;c.ebay=mEbay.checked;c.tcg=mTcg.checked;
  const order=cardOrder(c.id);
- if(order){order.shippingProfile=c.shipping;order.packageType=packageFor(c.shipping);(order.items||[]).forEach(it=>{if(it.cardId===c.id){it.location=c.location;it.sku=c.sku}})}
+ if(order){order.shippingProfile=c.shipping;(order.items||[]).forEach(it=>{if(it.cardId===c.id){it.location=c.location;it.sku=c.sku;it.weightOz=c.weightOz;it.lengthIn=c.lengthIn;it.widthIn=c.widthIn;it.heightIn=c.heightIn;it.packagingCost=c.packagingCost;it.costBasis=num(c.cost)}});delete order.shippingPaid;recalcOrder(order)}
  save();toast('Inventory item saved');renderInventory();renderManagerFulfillment();
 }
 async function marketLookupManager(){
@@ -525,11 +641,13 @@ function renderManagerListings(){
 function endListing(id){const c=state.inventory[managerIndex];const x=(c.listings||[]).find(y=>y.id===id);if(x){x.status='Ended';x.ended=new Date().toISOString();event(c,'listing_ended',`${x.platform} listing ${x.id} ended`)}save();renderManagerListings();renderInventory();renderTimeline()}
 function simulateSale(listingId){
  const c=state.inventory[managerIndex];if(!c)return;
+ ensureItemShipping(c);
  const listing=(c.listings||[]).find(x=>x.id===listingId);
  if(!listing||listing.status!=='Listed')return toast('Choose an active listing');
  const now=new Date().toISOString();
  const sale={id:uid(),cardId:c.id,sku:c.sku,listingId:listing.id,platform:listing.platform,price:Number(listing.price||c.ask||0),quantity:1,buyer:'Simulated Buyer',soldAt:now,status:'Sold'};
- const order={id:orderId(),saleId:sale.id,buyer:sale.buyer,platform:listing.platform,status:'Pick',created:now,shippingProfile:c.shipping,packageType:packageFor(c.shipping),items:[{cardId:c.id,sku:c.sku,name:c.identification?.name,location:c.location||'',listingId:listing.id,price:sale.price}]};
+ const order={id:orderId(),saleId:sale.id,buyer:sale.buyer,platform:listing.platform,status:'Pick',created:now,shippingProfile:c.shipping,packageType:packageFor(c.shipping),items:[{cardId:c.id,sku:c.sku,name:c.identification?.name,location:c.location||'',listingId:listing.id,price:sale.price,costBasis:num(c.cost),weightOz:c.weightOz,lengthIn:c.lengthIn,widthIn:c.widthIn,heightIn:c.heightIn,packagingCost:c.packagingCost,handlingMinutes:c.handlingMinutes}]};
+ recalcOrder(order);
  listing.status='Sold';listing.soldAt=now;
  (c.listings||[]).forEach(x=>{if(x.id!==listing.id&&x.status==='Listed'){x.status='Delisted after sale';x.ended=now;x.delistReason=`Sold on ${listing.platform}`}});
  c.saleStatus='Sold';c.fulfillmentStatus='Pick';c.status='Sold';c.reservedBy=order.id;
@@ -540,7 +658,10 @@ function simulateSale(listingId){
 }
 function updateOrder(orderId,status){
  const order=(state.orders||[]).find(o=>o.id===orderId);if(!order)return;
- order.status=status;order.updated=new Date().toISOString();
+ const now=new Date().toISOString();
+ order.status=status;order.updated=now;if(status==='Shipped')order.shippedAt=now;
+ const sale=(state.sales||[]).find(s=>s.id===order.saleId);
+ if(sale){sale.status=status==='Shipped'?'Completed':'Sold';if(status==='Shipped')sale.completedAt=now}
  (order.items||[]).forEach(it=>{
    const c=state.inventory.find(x=>x.id===it.cardId);
    if(c){c.fulfillmentStatus=status;c.status=status==='Shipped'?'Shipped':'Sold';event(c,'fulfillment',`${order.id} marked ${status}`)}
@@ -549,6 +670,10 @@ function updateOrder(orderId,status){
    (state.reservations||[]).filter(r=>r.orderId===orderId).forEach(r=>r.status='Released');
  }
  save();renderFulfillment();renderManagerFulfillment();renderTimeline();renderInventory();toast(`Order marked ${status}`);
+}
+function updateOrderCost(orderId,key,value){
+ const order=(state.orders||[]).find(o=>o.id===orderId);if(!order)return;
+ order[key]=num(value);recalcOrder(order);save();toast('Order costs updated');
 }
 function bundleOrders(){
  const groups={};
@@ -573,9 +698,10 @@ function renderFulfillment(){
  const orders=activeOrders();
  if(count)count.textContent=orders.length?`${orders.length} open`:'Clear';
  list.innerHTML=orders.length?orders.map(o=>{
+   recalcOrder(o);
    const items=o.items||[],item=items[0]||{};
    const next=o.status==='Pick'?'Packed':o.status==='Packed'?'Shipped':'Shipped';
-   return `<div class="fulfillCard"><div class="row space"><div><b>${esc(o.id)}</b><div class="tiny muted">${esc(o.platform)} • ${esc(o.packageType)}</div></div><span class="status warn">${esc(o.status)}</span></div><div style="margin-top:7px">${items.length} item${items.length===1?'':'s'} for ${esc(o.buyer||'Buyer')}</div><div class="tiny muted">${items.map(it=>`Pick ${esc(it.sku||'No SKU')} from ${esc(it.location||'No location assigned')}`).join('<br>')}</div><div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" onclick="go('inventory');openCardById('${esc(item.cardId||'')}')">Open card</button><button class="btn primary" style="flex:1" onclick="updateOrder('${esc(o.id)}','${next}')">Mark ${next}</button></div></div>`
+   return `<div class="fulfillCard"><div class="row space"><div><b>${esc(o.id)}</b><div class="tiny muted">${esc(o.platform)} • ${esc(o.recommendedPackage)} • ${esc(o.recommendedBox)}</div></div><span class="status warn">${esc(o.status)}</span></div><div style="margin-top:7px">${items.length} item${items.length===1?'':'s'} for ${esc(o.buyer||'Buyer')}</div><div class="tiny muted">${items.map(it=>`Pick ${esc(it.sku||'No SKU')} from ${esc(it.location||'No location assigned')}`).join('<br>')}<br>Total weight: ${num(o.totalWeightOz).toFixed(1)} oz</div><div class="miniFields" style="margin-top:8px"><div class="field"><label>SHIP PAID</label><input type="number" step=".01" value="${num(o.shippingPaid)}" onchange="updateOrderCost('${esc(o.id)}','shippingPaid',this.value)"></div><div class="field"><label>PACKAGING</label><input type="number" step=".01" value="${num(o.packagingCost)}" onchange="updateOrderCost('${esc(o.id)}','packagingCost',this.value)"></div><div class="field"><label>SALES TAX</label><input type="number" step=".01" value="${num(o.salesTaxCollected)}" onchange="updateOrderCost('${esc(o.id)}','salesTaxCollected',this.value)"></div><div class="field"><label>PLATFORM FEE</label><input type="number" step=".01" value="${num(o.platformFee)}" onchange="updateOrderCost('${esc(o.id)}','platformFee',this.value)"></div></div><div class="pricegrid" style="margin-top:8px"><div class="pricebox"><span class="tiny muted">Receipts</span><b>${money(num(o.itemTotal)+num(o.shippingCollected))}</b></div><div class="pricebox"><span class="tiny muted">Net after costs</span><b>${money(o.netIncome)}</b></div></div><div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" onclick="go('inventory');openCardById('${esc(item.cardId||'')}')">Open card</button><button class="btn primary" style="flex:1" onclick="updateOrder('${esc(o.id)}','${next}')">Mark ${next}</button></div></div>`
  }).join(''):`<div class="empty"><b>No orders to ship</b>Simulated sales will appear here with pick location, package type and delist status.</div>`;
 }
 function renderManagerFulfillment(){
@@ -583,7 +709,8 @@ function renderManagerFulfillment(){
  const order=cardOrder(c.id),badge=document.getElementById('mFulfillmentStatus');
  const status=itemStatus(c);
  if(badge){badge.textContent=status;badge.className=`status ${status==='Available'?'':status==='Sold'?'sold':'hold'}`}
- mFulfillment.innerHTML=order?`<div class="fulfillCard"><b>${esc(order.id)}</b><div class="tiny muted">${esc(order.platform)} • ${esc(order.packageType)} • ${(order.items||[]).length} item${(order.items||[]).length===1?'':'s'}</div><div style="margin-top:6px">Pick from ${esc((order.items||[]).find(it=>it.cardId===c.id)?.location||c.location||'No location assigned')}</div><div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" onclick="updateOrder('${order.id}','Packed')" ${order.status!=='Pick'?'disabled':''}>Picked</button><button class="btn primary" style="flex:1" onclick="updateOrder('${order.id}','Shipped')" ${order.status==='Shipped'?'disabled':''}>Shipped</button></div></div>`:`<div class="tiny muted">No open fulfillment task for this card. Simulate a sale from an active listing to create one.</div>`;
+ if(order)recalcOrder(order);
+ mFulfillment.innerHTML=order?`<div class="fulfillCard"><b>${esc(order.id)}</b><div class="tiny muted">${esc(order.platform)} • ${esc(order.recommendedPackage)} • ${(order.items||[]).length} item${(order.items||[]).length===1?'':'s'}</div><div style="margin-top:6px">Pick from ${esc((order.items||[]).find(it=>it.cardId===c.id)?.location||c.location||'No location assigned')}</div><div class="tiny muted">Box: ${esc(order.recommendedBox)} • ${num(order.totalWeightOz).toFixed(1)} oz • net ${money(order.netIncome)}</div><div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" onclick="updateOrder('${order.id}','Packed')" ${order.status!=='Pick'?'disabled':''}>Picked</button><button class="btn primary" style="flex:1" onclick="updateOrder('${order.id}','Shipped')" ${order.status==='Shipped'?'disabled':''}>Shipped</button></div></div>`:`<div class="tiny muted">No open fulfillment task for this card. Simulate a sale from an active listing to create one.</div>`;
 }
 function renderTimeline(){
  const c=state.inventory[managerIndex];if(!c||!document.getElementById('mTimeline'))return;
@@ -591,6 +718,26 @@ function renderTimeline(){
  mTimeline.innerHTML=events.length?events.slice(0,12).map(e=>`<div class="event"><b>${esc(e.type.replace(/_/g,' '))}</b><span class="tiny muted">${new Date(e.at).toLocaleString()} • ${esc(e.detail)}</span></div>`).join(''):`<div class="tiny muted">No item events yet.</div>`;
 }
 function openCardById(id){const idx=state.inventory.findIndex(c=>c.id===id);if(idx>=0)openManager(idx)}
+function csvCell(v){return `"${String(v??'').replace(/"/g,'""')}"`}
+function downloadCsv(name,rows){
+ const csv=rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function exportCsv(kind){
+ if(kind==='sales'){
+   const rows=[['order_id','status','platform','buyer','created','shipped_at','items','gross_receipts','sales_tax_collected','platform_fee','shipping_collected','shipping_paid','packaging_cost','cost_basis','net_income']];
+   (state.orders||[]).filter(o=>o.status!=='Bundled').forEach(o=>{recalcOrder(o);rows.push([o.id,o.status,o.platform,o.buyer,o.created,o.shippedAt,(o.items||[]).map(it=>it.sku).join(' | '),num(o.itemTotal)+num(o.shippingCollected),o.salesTaxCollected,o.platformFee,o.shippingCollected,o.shippingPaid,o.packagingCost,o.costBasis,o.netIncome])});
+   return downloadCsv('cardvault-sales.csv',rows);
+ }
+ if(kind==='orders'){
+   const rows=[['order_id','status','platform','buyer','package','box','weight_oz','item_count','ship_paid','packaging_cost','sales_tax','net_income','locations']];
+   (state.orders||[]).filter(o=>o.status!=='Bundled').forEach(o=>{recalcOrder(o);rows.push([o.id,o.status,o.platform,o.buyer,o.recommendedPackage,o.recommendedBox,o.totalWeightOz,(o.items||[]).length,o.shippingPaid,o.packagingCost,o.salesTaxCollected,o.netIncome,(o.items||[]).map(it=>`${it.sku} ${it.location}`).join(' | ')])});
+   return downloadCsv('cardvault-orders.csv',rows);
+ }
+ const rows=[['sku','status','name','set','number','group','location','quantity','cost_basis','inventory_value','weight_oz','size_lwh','condition']];
+ state.inventory.forEach(c=>{ensureItemShipping(c);rows.push([c.sku,itemStatus(c),c.identification?.name,c.identification?.set_name,c.identification?.collector_number,c.group,c.location,c.quantity,c.cost,cardValueNumber(c),c.weightOz,`${c.lengthIn}x${c.widthIn}x${c.heightIn}`,c.condition])});
+ downloadCsv('cardvault-inventory.csv',rows);
+}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-stats();status();renderInventory();renderFulfillment();
+stats();status();renderInventory();renderFulfillment();renderFinance();
 </script></body></html>

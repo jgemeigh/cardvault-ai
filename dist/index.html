@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CardVault AI</title>
+<style>
+:root{--bg:#0a0c10;--panel:#151922;--line:#2b3240;--muted:#98a2b5;--text:#f6f8fb;--accent:#7aa2ff;--good:#5fd094;--warn:#f0c65b;--bad:#ed6874}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.35 system-ui,-apple-system,Segoe UI,sans-serif}button,input,select{font:inherit}
+.app{max-width:620px;margin:auto;min-height:100vh;padding-bottom:88px}.header{position:sticky;top:0;z-index:20;background:rgba(10,12,16,.97);padding:12px 14px 9px;border-bottom:1px solid #191d25}.brand{display:flex;align-items:center;justify-content:space-between}.logo{font-size:20px;font-weight:900}.pill{font-size:10px;padding:5px 8px;background:#202735;border-radius:99px;color:#c2d3ff}
+.tabs{display:flex;gap:7px;overflow:auto;padding-top:10px}.tab,.btn{border:0;border-radius:12px;padding:10px 12px;background:#242a36;color:#fff;font-weight:750}.tab{padding:8px 11px;border:1px solid var(--line);background:#151922;color:var(--muted);white-space:nowrap}.tab.active{background:#26314a;color:#fff}.btn.primary{background:var(--accent);color:#07101f}.btn.good{background:var(--good);color:#07130d}.btn.bad{background:var(--bad);color:#18080b}.btn.ghost{background:transparent;border:1px solid var(--line)}.btn.full{width:100%}.btn:disabled{opacity:.45}
+.content{padding:14px}.section{display:none}.section.active{display:block}.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:13px;margin-bottom:12px}.muted{color:var(--muted)}.tiny{font-size:11px}.big{font-size:25px;font-weight:900}.row{display:flex;gap:9px;align-items:center}.space{justify-content:space-between}.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.stat{background:#1b202a;padding:12px;border-radius:14px}
+.gallery{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.tile{position:relative;background:#11151c;border:1px solid var(--line);border-radius:14px;padding:7px}.tile.selected{outline:2px solid var(--accent)}.pair{display:grid;grid-template-columns:1fr 1fr;gap:4px}.pair img{width:100%;aspect-ratio:2.5/3.5;object-fit:cover;background:#07090c;border-radius:7px}.check{position:absolute;top:10px;right:10px;width:25px;height:25px;border:2px solid #fff;background:#111;border-radius:50%;display:grid;place-items:center;font-weight:900}.tile.selected .check{background:var(--accent);color:#07101f}
+.photos{display:grid;grid-template-columns:1fr 1fr;gap:8px}.photos img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;background:#080a0e;border-radius:11px;border:1px solid #303746}.field{margin:10px 0}.field label{display:block;color:var(--muted);font-size:11px;margin-bottom:5px}.field input,.field select{width:100%;background:#0e1218;border:1px solid var(--line);color:#fff;border-radius:11px;padding:11px}
+.candidates{display:flex;gap:8px;overflow:auto}.candidate{min-width:92px;background:#10141b;border:1px solid var(--line);border-radius:11px;padding:6px}.candidate img{width:78px;height:108px;object-fit:contain}.candidate b{font-size:10px}.status{font-size:10px;padding:4px 7px;background:#252c38;border-radius:99px}.status.good{background:#143321;color:#8fe2ad}.status.warn{background:#3a3115;color:#ffe08a}.status.bad{background:#3a171c;color:#ffadb6}
+.gradeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grade{background:#11161d;border-radius:11px;padding:9px}.inv{display:grid;grid-template-columns:54px 1fr auto;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid #252b35}.inv img{width:54px;height:75px;object-fit:cover;border-radius:7px}.inv:last-child{border:0}.bottom{position:fixed;bottom:0;left:0;right:0;background:#0e1117;border-top:1px solid var(--line);padding:7px 10px calc(7px + env(safe-area-inset-bottom));z-index:30}.bottomInner{max-width:620px;margin:auto;display:grid;grid-template-columns:repeat(5,1fr)}.nav{background:none;border:0;color:#8791a3;font-size:10px}.nav span{display:block;font-size:19px}.nav.active{color:#fff}.hidden{display:none!important}.empty{text-align:center;padding:25px;color:var(--muted)}.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#edf2ff;color:#101827;padding:10px 13px;border-radius:11px;font-weight:800;opacity:0;transition:.2s;z-index:80}.toast.show{opacity:1}h2{margin:3px 0 12px;font-size:19px}h3{margin:0 0 7px}.spinner{display:inline-block;animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+
+.jobbar{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;width:min(590px,calc(100% - 20px));z-index:45;background:#151922;border:1px solid #35405a;border-radius:14px;padding:9px 11px;box-shadow:0 8px 30px #0008;display:none}
+.jobbar.show{display:block}.progress{height:6px;background:#252c39;border-radius:99px;overflow:hidden;margin-top:7px}.progress>i{display:block;height:100%;background:var(--accent);width:0}
+.manager{position:fixed;inset:0;z-index:70;background:var(--bg);overflow:auto;padding-bottom:90px;display:none}.manager.show{display:block}
+.managerHead{position:sticky;top:0;z-index:2;background:#0d1016;border-bottom:1px solid var(--line);padding:12px;display:flex;gap:10px;align-items:center}
+.managerBody{max-width:620px;margin:auto;padding:12px}.miniimg{width:64px;height:90px;object-fit:contain;border-radius:8px;background:#080a0e}
+.listingCard{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:#11161d}.platforms{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pricegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pricebox{background:#11161d;padding:10px;border-radius:10px}.pricebox b{display:block;font-size:16px}
+.clickable{cursor:pointer}.clickable:active{opacity:.7}
+
+:root{--surface:#11151c;--surface2:#171c25;--soft:#202633;--accent2:#9bb7ff;--radius:18px}
+body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.logo{letter-spacing:-.4px}
+.tabs{display:none!important}.content{padding:16px}.card{border-radius:var(--radius);box-shadow:0 1px 0 #ffffff05}
+.btn{min-height:44px;padding:11px 14px}.btn.primary{box-shadow:0 5px 18px #5f89ff26}
+.hero{background:linear-gradient(145deg,#1b2230,#11151c 68%);border:1px solid #30394a;border-radius:22px;padding:18px;margin-bottom:14px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.hero h1{font-size:27px;line-height:1.05;margin:7px 0 6px;letter-spacing:-.8px}.hero p{margin:0;color:var(--muted)}
+.quickrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 16px}.quick{background:var(--surface2);border:1px solid var(--line);border-radius:15px;padding:11px}.quick b{display:block;font-size:20px}.quick span{font-size:10px;color:var(--muted)}
+.nextCard{border:1px solid #405171;background:#172032;border-radius:18px;padding:14px;margin-bottom:12px}.nextCard .btn{margin-top:11px;width:100%}
+.sectionTitle{display:flex;justify-content:space-between;align-items:flex-end;margin:0 0 12px}.sectionTitle h2{margin:0}.sectionTitle .muted{font-size:12px}
+.toolbar{display:flex;gap:8px;margin-bottom:12px}.toolbar>*{min-width:0}.search{flex:1;background:#10141b;border:1px solid var(--line);color:#fff;border-radius:13px;padding:11px 12px}
+.segment{display:flex;background:#10141b;border:1px solid var(--line);padding:3px;border-radius:13px;overflow:auto;margin-bottom:12px}.seg{flex:1;white-space:nowrap;border:0;background:transparent;color:var(--muted);padding:8px 10px;border-radius:10px;font-weight:700}.seg.active{background:#2a3240;color:#fff}
+.gallery{grid-template-columns:1fr;gap:9px}.tile{display:grid;grid-template-columns:88px 88px 1fr;align-items:center;gap:8px;padding:9px;border-radius:16px}.tile .pair{display:contents}.tile .pair>div{min-width:0}.tile .pair img{height:116px;aspect-ratio:auto;object-fit:contain}.tile .check{top:9px;right:9px}.tileMeta{padding-right:28px}.tileMeta b{display:block;font-size:13px;margin-bottom:4px}.tileMeta .stateLine{margin-top:7px}
+.selectionBar{position:sticky;bottom:82px;z-index:15;background:#171c25eF;backdrop-filter:blur(16px);border:1px solid #35405a;border-radius:17px;padding:9px;display:flex;gap:8px;margin-top:12px}.selectionBar .btn{flex:1}
+.reviewQueue{display:flex;gap:7px;overflow:auto;padding:1px 1px 10px}.reviewChip{flex:0 0 66px;border:1px solid var(--line);background:#10141b;border-radius:12px;padding:5px}.reviewChip.active{outline:2px solid var(--accent)}.reviewChip img{width:54px;height:76px;object-fit:contain;border-radius:7px}
+.reviewHero{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:9px 0 13px}.reviewHero img{width:100%;aspect-ratio:2.5/3.5;object-fit:contain;background:#090b0f;border-radius:13px;border:1px solid var(--line)}
+.confRow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.infoRows{border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:12px}.infoRow{display:grid;grid-template-columns:92px 1fr;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line)}.infoRow:last-child{border:0}.infoRow span{color:var(--muted);font-size:11px}.infoRow b{font-size:13px}
+.actionGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.inventoryGrid{display:grid;gap:9px}.invCard{display:grid;grid-template-columns:68px 1fr auto;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:9px}.invCard img{width:68px;height:95px;object-fit:contain;border-radius:9px;background:#080a0e}.invCard h3{font-size:14px;margin:0 0 3px}.invCard .meta{font-size:11px;color:var(--muted)}.invCard .value{font-weight:900;margin-top:6px}.chev{font-size:22px;color:#657086}
+.empty{border:1px dashed #384150;background:#11151c;border-radius:18px;padding:28px 18px}.empty b{display:block;color:#fff;font-size:16px;margin-bottom:5px}.empty .btn{margin-top:12px}
+.scanChoice{display:grid;grid-template-columns:1fr 1fr;gap:9px}.scanChoice .card{margin:0}.scanIcon{font-size:26px;margin-bottom:8px}
+.managerHead{padding:10px 12px}.managerBody{padding:14px}.managerSaveBar{position:sticky;bottom:0;background:#0d1016eb;backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:10px;display:flex;gap:8px;z-index:3}.managerSaveBar .btn{flex:1}
+.field input,.field select{min-height:45px}.bottom{background:#0c0f14eb;backdrop-filter:blur(18px)}.nav{min-height:54px}.nav span{font-size:20px;margin-bottom:2px}.nav.active{color:var(--accent2)}
+.badgeDot{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;background:#293449;color:#dbe5ff;border-radius:99px;font-size:10px;margin-left:3px}
+.kicker{font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:12px}.dangerText{color:#ff9ba6}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.1</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
+<main class="content">
+<section id="home" class="section active">
+  <div class="hero"><div class="eyebrow">Workspace</div><h1>Turn scans into sellable inventory.</h1><p>Capture, identify, review, price and stage listings without losing track of where anything is.</p></div>
+  <div class="quickrow">
+    <div class="quick" onclick="go('images')"><b id="sImages">0</b><span>TO IDENTIFY</span></div>
+    <div class="quick" onclick="go('drafts')"><b id="sDrafts">0</b><span>TO REVIEW</span></div>
+    <div class="quick" onclick="go('inventory')"><b id="sInventory">0</b><span>INVENTORY</span></div>
+  </div>
+  <div id="nextAction" class="nextCard"></div>
+  <div class="sectionTitle"><h2>Quick actions</h2><span class="muted" id="sAI">—</span></div>
+  <div class="actionGrid">
+    <button class="btn primary" onclick="go('scan')">＋ Add scans</button>
+    <button class="btn ghost" onclick="go('images')">Identify cards</button>
+    <button class="btn ghost" onclick="go('drafts')">Review matches</button>
+    <button class="btn ghost" onclick="go('inventory')">Manage inventory</button>
+  </div>
+</section>
+
+<section id="images" class="section">
+  <div class="sectionTitle"><div><h2>Identify</h2><div class="kicker">Select scan pairs and send them through AI ID.</div></div><button class="btn ghost" onclick="selectAll()">Select all</button></div>
+  <div id="gallery" class="gallery"></div>
+  <div id="imagesEmpty" class="empty"><b>No scans waiting</b>Add scanner images or load a demo batch to start.<br><button class="btn primary" onclick="go('scan')">Add scans</button></div>
+  <div id="selectionBar" class="selectionBar"><button class="btn bad" onclick="deleteSelected()">Delete</button><button id="idBtn" class="btn primary" onclick="identifySelected()">Identify selected</button></div>
+</section>
+
+<section id="drafts" class="section">
+  <div class="sectionTitle"><div><h2>Review</h2><div class="kicker">Confirm AI matches, condition and market data before inventory.</div></div><span id="draftCount" class="status"></span></div>
+  <div id="reviewQueue" class="reviewQueue"></div>
+  <div id="draftEmpty" class="empty"><b>Review queue is clear</b>Identified cards will appear here.<br><button class="btn primary" onclick="go('images')">Go to Identify</button></div>
+  <div id="draftCard" class="hidden">
+    <div class="confRow"><span id="confidence" class="status good"></span><span id="reviewState" class="status">AI match</span></div>
+    <div class="reviewHero"><img id="dFront"><img id="dBack"></div>
+    <div class="card">
+      <div class="field"><label>IDENTIFIED CARD</label><input id="dName"></div>
+      <div class="infoRows">
+        <div class="infoRow"><span>Set</span><b id="dSet"></b></div>
+        <div class="infoRow"><span>Number</span><b id="dNumber"></b></div>
+        <div class="infoRow"><span>Variant</span><b id="dVariant"></b></div>
+        <div class="infoRow"><span>Language</span><b id="dLanguage"></b></div>
+      </div>
+      <div id="candidateWrap" class="field"><label>OTHER MATCHES</label><div id="candidates" class="candidates"></div></div>
+      <details><summary class="tiny muted">AI evidence</summary><div id="evidence" class="tiny muted" style="padding-top:8px"></div></details>
+    </div>
+    <div class="actionGrid">
+      <button class="btn ghost" onclick="rematch()">Re-identify</button>
+      <button id="gradeBtn" class="btn primary" onclick="appraise()">Assess condition</button>
+    </div>
+    <div id="appraisal" class="hidden"></div>
+    <div class="card">
+      <div class="row space"><div><b>Market Intelligence</b><div class="tiny muted">TCGplayer · Cardmarket · graded</div></div><button class="btn ghost" onclick="marketLookupDraft()">Refresh</button></div>
+      <div id="draftMarkets" class="tiny muted" style="margin-top:9px">Tap Refresh when the match is confirmed.</div>
+    </div>
+    <div class="card"><div class="field" style="margin:0"><label>INVENTORY GROUP</label><select id="dGroup"><option>High Value Singles</option><option>Raw Singles</option><option>Modern Hits</option><option>Vintage</option><option>Bulk / Low Value</option><option>Holo / Reverse Holo</option><option>Promos</option><option>Needs Research</option></select></div></div>
+    <div class="actionGrid"><button class="btn ghost" onclick="skipDraft()">Review later</button><button class="btn good" onclick="confirmDraft()">Add to inventory</button></div>
+  </div>
+</section>
+
+<section id="inventory" class="section">
+  <div class="sectionTitle"><div><h2>Inventory</h2><div class="kicker">Search, price, group and stage listings.</div></div><button class="btn primary" onclick="go('scan')">＋</button></div>
+  <div class="toolbar"><input id="invSearch" class="search" placeholder="Search card, set, SKU…" oninput="renderInventory()"></div>
+  <div class="segment"><button class="seg active" data-ifilter="all" onclick="setInvFilter('all',this)">All</button><button class="seg" data-ifilter="unlisted" onclick="setInvFilter('unlisted',this)">Unlisted</button><button class="seg" data-ifilter="listed" onclick="setInvFilter('listed',this)">Listed</button><button class="seg" data-ifilter="research" onclick="setInvFilter('research',this)">Research</button></div>
+  <div id="inventoryList" class="inventoryGrid"></div>
+</section>
+
+<section id="scan" class="section">
+  <div class="sectionTitle"><div><h2>Add scans</h2><div class="kicker">Front + back stay paired through the whole workflow.</div></div></div>
+  <div class="scanChoice">
+    <div class="card"><div class="scanIcon">▣</div><h3>Demo batch</h3><div class="tiny muted">Load real photographed card pairs to test the pipeline.</div><div class="field"><select id="simCount"><option>2</option><option selected>4</option><option>8</option></select></div><button class="btn primary full" onclick="simulate()">Load demo</button></div>
+    <div class="card"><div class="scanIcon">↥</div><h3>Import pair</h3><div class="tiny muted">Use your own front/back scan images.</div><div class="field"><label>Front</label><input id="frontFile" type="file" accept="image/*"></div><div class="field"><label>Back</label><input id="backFile" type="file" accept="image/*"></div><button class="btn good full" onclick="importPair()">Add pair</button></div>
+  </div>
+  <div class="card" style="margin-top:12px"><b>Ricoh 8170 bridge</b><div class="tiny muted" style="margin-top:5px">Planned: scanner-side watcher uploads paired front/back images here automatically. The mobile workflow is already structured around those pairs.</div></div>
+</section>
+</main></div>
+<nav class="bottom"><div class="bottomInner"><button class="nav active" data-target="home"><span>⌂</span>Today</button><button class="nav" data-target="images"><span>◎</span>Identify <i id="navImageBadge" class="badgeDot"></i></button><button class="nav" data-target="drafts"><span>✓</span>Review <i id="navDraftBadge" class="badgeDot"></i></button><button class="nav" data-target="inventory"><span>▦</span>Inventory</button><button class="nav" data-target="scan"><span>＋</span>Add</button></div></nav>
+<div id="toast" class="toast"></div>
+<div id="jobBar" class="jobbar">
+  <div class="row space"><b id="jobTitle">AI batch</b><span id="jobCount" class="tiny muted"></span></div>
+  <div class="progress"><i id="jobProgress"></i></div>
+</div>
+
+<div id="manager" class="manager">
+  <div class="managerHead">
+    <button class="btn ghost" onclick="closeManager()">← Back</button>
+    <div style="flex:1"><b id="mHeading">Card details</b><div id="mSub" class="tiny muted"></div></div>
+    <button class="btn good" onclick="saveManager()">Save</button>
+  </div>
+  <div class="managerBody">
+    <div class="card"><div class="row">
+      <img id="mFront" class="miniimg"><img id="mBack" class="miniimg">
+      <div><div id="mName" class="big" style="font-size:18px"></div><div id="mMeta" class="muted tiny"></div></div>
+    </div></div>
+
+    <div class="card"><h3>Inventory</h3>
+      <div class="field"><label>SKU</label><input id="mSku"></div>
+      <div class="field"><label>GROUP</label><select id="mGroup"><option>High Value Singles</option><option>Raw Singles</option><option>Modern Hits</option><option>Vintage</option><option>Bulk / Low Value</option><option>Holo / Reverse Holo</option><option>Promos</option><option>Needs Research</option></select></div>
+      <div class="field"><label>STORAGE LOCATION</label><input id="mLocation" placeholder="Box A / Row 3 / Slot 12"></div>
+      <div class="field"><label>QUANTITY</label><input id="mQty" type="number" min="1"></div>
+      <div class="field"><label>COST BASIS</label><input id="mCost" type="number" step=".01"></div>
+      <div class="field"><label>CONDITION</label><select id="mCondition"><option>Near Mint</option><option>Lightly Played</option><option>Moderately Played</option><option>Heavily Played</option><option>Damaged</option><option>Graded</option></select></div>
+      <div class="field"><label>NOTES</label><input id="mNotes"></div>
+    </div>
+
+    <div class="card"><div class="row space"><h3>Market Intelligence</h3><button class="btn ghost" onclick="marketLookupManager()">Lookup</button></div>
+      <div id="mMarkets" class="muted tiny">No lookup yet.</div>
+    </div>
+
+    <div class="card"><h3>Listing draft</h3>
+      <div class="field"><label>LISTING TITLE</label><input id="mTitle"></div>
+      <div class="field"><label>DESCRIPTION</label><input id="mDesc"></div>
+      <div class="field"><label>ASKING PRICE</label><input id="mAsk" type="number" step=".01"></div>
+      <div class="field"><label>SHIPPING PROFILE</label><select id="mShipping"><option>PWE - $1.25</option><option>BMWT - $4.99</option><option>Free shipping</option><option>Calculated</option></select></div>
+      <div class="field"><label>PLATFORMS</label><div class="platforms">
+        <label class="card" style="margin:0"><input id="mEbay" type="checkbox" checked> eBay</label>
+        <label class="card" style="margin:0"><input id="mTcg" type="checkbox" checked> TCGplayer</label>
+      </div></div>
+      <div class="row">
+        <button class="btn primary" style="flex:1" onclick="simulateListing('eBay')">Simulate eBay Listing</button>
+        <button class="btn primary" style="flex:1" onclick="simulateListing('TCGplayer')">Simulate TCGplayer Listing</button>
+      </div>
+      <div id="mListings"></div>
+    </div>
+  </div><div class="managerSaveBar"><button class="btn ghost" onclick="closeManager()">Cancel</button><button class="btn good" onclick="saveManager()">Save changes</button></div>
+</div>
+
+<script>
+const STORE='cardvault-v4-ai';
+const REAL_BACK='https://i.ebayimg.com/images/g/wRMAAeSw6QBpvsWE/s-l960.png';
+let state=JSON.parse(localStorage.getItem(STORE)||'{"images":[],"drafts":[],"inventory":[]}');
+let aiConfigured=false;
+function save(){localStorage.setItem(STORE,JSON.stringify(state));stats()}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900)}
+function go(id){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('[data-target]').forEach(x=>x.classList.toggle('active',x.dataset.target===id));if(id==='images')renderImages();if(id==='drafts')renderDraft();if(id==='inventory')renderInventory();if(id==='home')stats()}
+document.querySelectorAll('[data-target]').forEach(b=>b.onclick=()=>go(b.dataset.target));
+async function status(){
+ const pill=document.getElementById('aiPill'),stat=document.getElementById('sAI');
+ try{
+   const r=await fetch('/api/status');const s=await r.json();aiConfigured=!!s.aiConfigured;
+   if(pill)pill.textContent=aiConfigured?'AI connected':'AI unavailable';
+   if(stat)stat.textContent=aiConfigured?'AI ready':'AI unavailable';
+ }catch{
+   if(pill)pill.textContent='Backend offline';
+   if(stat)stat.textContent='Backend offline';
+ }
+}
+function stats(){
+ sImages.textContent=state.images.length;sDrafts.textContent=state.drafts.length;sInventory.textContent=state.inventory.length;
+ if(document.getElementById('navImageBadge')){navImageBadge.textContent=state.images.length;navImageBadge.style.display=state.images.length?'inline-grid':'none'}
+ if(document.getElementById('navDraftBadge')){navDraftBadge.textContent=state.drafts.length;navDraftBadge.style.display=state.drafts.length?'inline-grid':'none'}
+ if(document.getElementById('nextAction')){
+   if(state.drafts.length)nextAction.innerHTML=`<div class="eyebrow">Next up</div><b>${state.drafts.length} card${state.drafts.length===1?'':'s'} need review</b><div class="tiny muted" style="margin-top:4px">Confirm identification, condition and market data.</div><button class="btn primary" onclick="go('drafts')">Review cards</button>`;
+   else if(state.images.length)nextAction.innerHTML=`<div class="eyebrow">Next up</div><b>${state.images.length} scan pair${state.images.length===1?'':'s'} ready to identify</b><div class="tiny muted" style="margin-top:4px">Select the batch and run AI identification.</div><button class="btn primary" onclick="go('images')">Identify cards</button>`;
+   else nextAction.innerHTML=`<div class="eyebrow">Ready</div><b>Add a scan batch</b><div class="tiny muted" style="margin-top:4px">Import your own front/back pair or load demo cards.</div><button class="btn primary" onclick="go('scan')">Add scans</button>`;
+ }
+}
+
+async function apiJson(url,options){
+  const r=await fetch(url,options);
+  const text=await r.text();
+  let j;
+  try{j=JSON.parse(text)}
+  catch{
+    const plain=text.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,180);
+    throw new Error(`Server returned ${r.status} instead of JSON${plain?`: ${plain}`:""}`);
+  }
+  if(!r.ok) throw new Error(j.error||`Request failed (${r.status})`);
+  return j;
+}
+
+function uid(){return 'CV-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6)}
+function simulate(){
+ const CONDITION_POOL=[{front:'https://i.ebayimg.com/images/g/SHUAAOSwKy1gBMIj/s-l1600.webp',back:'https://i.ebayimg.com/images/g/tTsAAOSwIgdgBMIk/s-l1600.webp'},{front:'https://i.ebayimg.com/images/g/AbwAAeSw5GhotgSe/s-l1600.webp',back:'https://i.ebayimg.com/images/g/PVcAAeSwaNVotgSw/s-l1600.webp'},{front:'https://i.ebayimg.com/images/g/8IAAAeSwgIdpJy5y/s-l1600.webp',back:'https://i.ebayimg.com/images/g/7gQAAeSwbKppJy5x/s-l1600.webp'},{front:'https://i.ebayimg.com/images/g/0DgAAeSwTHlpUwmV/s-l1600.webp',back:'https://i.ebayimg.com/images/g/4BUAAeSwx99pUwmV/s-l1600.webp'}];
+ const n=+simCount.value;
+ for(let i=0;i<n;i++){
+   const p=CONDITION_POOL[Math.floor(Math.random()*CONDITION_POOL.length)];
+   state.images.unshift({id:uid(),front:p.front,back:p.back,selected:true,source:'physical_scan',challenge:true});
+ }
+ save();toast(`${n} verified single-card photo pair${n===1?'':'s'} added`);go('images');
+}
+function renderImages(){
+ const galleryEl=document.getElementById('gallery');
+ const emptyEl=document.getElementById('imagesEmpty');
+ const barEl=document.getElementById('selectionBar');
+ const btnEl=document.getElementById('idBtn');
+ if(!galleryEl||!emptyEl||!btnEl)return;
+ galleryEl.innerHTML='';
+ emptyEl.classList.toggle('hidden',!!state.images.length);
+ const selected=state.images.filter(x=>x.selected).length;
+ if(barEl)barEl.style.display=state.images.length?'flex':'none';
+ btnEl.textContent=selected?`Identify ${selected} selected`:'Identify selected';
+ btnEl.disabled=false;
+ state.images.forEach(x=>{
+   const row=document.createElement('div');
+   row.className='tile'+(x.selected?' selected':'');
+   row.onclick=()=>{x.selected=!x.selected;save();renderImages()};
+   const st=x.aiState==='error'
+     ?`<span class="status bad">ID failed</span>`
+     :x.aiState==='identifying'
+       ?`<span class="status warn">Identifying…</span>`
+       :`<span class="status">Ready</span>`;
+   row.innerHTML=`<div class="check">${x.selected?'✓':''}</div><div class="pair"><div><img src="${x.front}" onerror="this.style.opacity=.25"></div><div><img src="${x.back}" onerror="this.style.opacity=.25"></div></div><div class="tileMeta"><b>Front + back pair</b><div class="tiny muted">${x.id}</div><div class="stateLine">${st}</div>${x.aiError?`<div class="tiny dangerText" style="margin-top:5px">${esc(x.aiError)}</div>`:''}</div>`;
+   galleryEl.appendChild(row);
+ });
+}function selectAll(){const all=state.images.every(x=>x.selected);state.images.forEach(x=>x.selected=!all);save();renderImages()}
+function deleteSelected(){state.images=state.images.filter(x=>!x.selected);save();renderImages()}
+async function identifySelected(){
+ const btn=document.getElementById('idBtn');
+ const bar=document.getElementById('jobBar');
+ const title=document.getElementById('jobTitle');
+ const count=document.getElementById('jobCount');
+ const progress=document.getElementById('jobProgress');
+ const chosen=state.images.filter(x=>x.selected);
+ if(!chosen.length){toast('Select at least one card first');return}
+ if(!btn){toast('Identify control failed to initialize');return}
+ btn.disabled=true;
+ btn.textContent='Starting AI…';
+ if(bar)bar.classList.add('show');
+ if(title)title.textContent='AI identification running';
+ let done=0,failed=0;
+ try{
+   for(const x of [...chosen]){
+     if(count)count.textContent=`${done+failed+1} of ${chosen.length}`;
+     if(progress)progress.style.width=`${Math.round(((done+failed)/chosen.length)*100)}%`;
+     x.aiState='identifying';x.selected=false;save();
+     if(document.querySelector('#images.section.active'))renderImages();
+     btn.disabled=true;
+     btn.textContent=`Identifying ${done+failed+1} of ${chosen.length}…`;
+     try{
+       const j=await apiJson('/api/identify',{
+         method:'POST',
+         headers:{'Content-Type':'application/json'},
+         body:JSON.stringify({front:x.front,back:x.back})
+       });
+       if(!j?.identification)throw new Error('AI returned no identification');
+       state.drafts.push({
+         id:x.id,front:x.front,back:x.back,source:x.source||'physical_scan',
+         identification:j.identification,candidates:j.catalogCandidates||[],
+         appraisal:null,group:smartGroup(j.identification),pricing:null
+       });
+       state.images=state.images.filter(i=>i.id!==x.id);
+       done++;
+     }catch(e){
+       x.aiState='error';
+       x.aiError=e?.message||'Identification failed';
+       failed++;
+     }
+     save();
+     if(document.querySelector('#images.section.active'))renderImages();
+     if(document.querySelector('#drafts.section.active'))renderDraft();
+   }
+ }catch(e){
+   toast(`Identify stopped: ${e?.message||'Unknown error'}`);
+ }finally{
+   btn.disabled=false;
+   if(progress)progress.style.width='100%';
+   if(title)title.textContent=failed?'AI batch finished with errors':'AI batch complete';
+   if(count)count.textContent=`${done} identified${failed?`, ${failed} failed`:''}`;
+   setTimeout(()=>bar?.classList.remove('show'),2500);
+   renderImages();
+ }
+ if(done)toast(`${done} card${done===1?'':'s'} moved to Review`);
+ if(!done&&failed)toast(`Identification failed on ${failed} card${failed===1?'':'s'}`);
+}function smartGroup(i){const r=(i.rarity||'').toLowerCase(),v=(i.variant||'').toLowerCase(),s=(i.set_name||'').toLowerCase();if(s.includes('base')||s.includes('jungle')||s.includes('fossil'))return'Vintage';if(r.includes('promo'))return'Promos';if(v.includes('holo')||r.includes('holo'))return'Holo / Reverse Holo';if(r.includes('rare')||r.includes('illustration'))return'Modern Hits';return'Raw Singles'}
+let draftIndex=0;function current(){if(draftIndex>=state.drafts.length)draftIndex=Math.max(0,state.drafts.length-1);return state.drafts[draftIndex]}
+function selectDraft(idx){draftIndex=idx;renderDraft()}
+function skipDraft(){if(state.drafts.length<2)return toast('Only one card in review');draftIndex=(draftIndex+1)%state.drafts.length;renderDraft()}
+function renderReviewQueue(){
+ if(!document.getElementById('reviewQueue'))return;
+ reviewQueue.innerHTML=state.drafts.map((c,i)=>`<button class="reviewChip ${i===draftIndex?'active':''}" onclick="selectDraft(${i})"><img src="${c.front}"><div class="tiny">${i+1}</div></button>`).join('');
+}
+function renderDraft(){renderReviewQueue();const c=current();draftEmpty.classList.toggle('hidden',!!c);draftCard.classList.toggle('hidden',!c);if(!c)return;const i=c.identification;dFront.src=c.front;dBack.src=c.back;dName.value=i.name;dSet.textContent=i.set_name;dNumber.textContent=i.collector_number;dVariant.textContent=i.variant;dLanguage.textContent=i.language;confidence.textContent=`${Math.round(i.confidence*100)}% AI confidence`;draftCount.textContent=state.drafts.length?`${draftIndex+1} of ${state.drafts.length}`:'';evidence.innerHTML=(i.visible_evidence||[]).map(e=>'• '+esc(e)).join('<br>');dGroup.value=c.group;candidates.innerHTML=(c.candidates||[]).map(x=>`<div class="candidate" onclick="useCandidate('${x.id}')"><img src="${x.image}"><b>${esc(x.name)} ${esc(x.number)}</b><div class="tiny muted">${esc(x.set)}</div></div>`).join('');candidateWrap.classList.toggle('hidden',!c.candidates?.length);renderAppraisal();renderDraftMarkets()}
+function useCandidate(id){const c=current(),x=c.candidates.find(y=>y.id===id);if(!x)return;c.identification.name=x.name;c.identification.collector_number=x.number;c.identification.set_name=x.set;c.identification.confidence=1;save();renderDraft();toast('Catalog candidate selected')}
+async function rematch(){const c=current();if(!c)return;let j;try{j=await apiJson('/api/identify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({front:c.front,back:c.back})})}catch(e){return toast(e.message)};c.identification=j.identification;c.candidates=j.catalogCandidates||[];c.appraisal=null;c.group=smartGroup(c.identification);save();renderDraft();toast('AI identification rerun')}
+async function appraise(){const c=current();if(!c)return;gradeBtn.disabled=true;gradeBtn.textContent='AI inspecting scans…';const i=c.identification;try{const j=await apiJson('/api/appraise',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({front:c.front,back:c.back,cardName:i.name,cardNumber:i.collector_number,setName:i.set_name})});c.appraisal=j.appraisal;save();renderAppraisal();renderDraftMarkets()}catch(e){toast(e.message)}finally{gradeBtn.disabled=false;gradeBtn.textContent='Assess condition'}}
+function renderAppraisal(){const c=current();if(!c?.appraisal){appraisal.classList.add('hidden');return}const a=c.appraisal;appraisal.classList.remove('hidden');appraisal.innerHTML=`<div class="card" style="margin-top:10px;background:#10141b"><div class="row space"><div><b>Likely grade range</b><div class="tiny muted">visual pre-grade only</div></div><div class="big">${a.grade_low}–${a.grade_high}</div></div><div class="gradeGrid" style="margin-top:9px"><div class="grade"><div class="tiny muted">Corners</div>${esc(a.corners.severity)}</div><div class="grade"><div class="tiny muted">Edges</div>${esc(a.edges.severity)}</div><div class="grade"><div class="tiny muted">Surface</div>${esc(a.surface.severity)}</div><div class="grade"><div class="tiny muted">Print</div>${esc(a.print_quality.severity)}</div></div><div class="tiny muted" style="margin-top:9px">${esc(a.summary)}</div></div>`}
+
+
+function money(v,currency='USD'){
+ if(v==null||v==="")return '—';
+ const n=Number(v);
+ if(!Number.isFinite(n))return '—';
+ try{return new Intl.NumberFormat('en-US',{style:'currency',currency}).format(n)}
+ catch{return `$${n.toFixed(2)}`}
+}
+function marketsHtml(p){
+ if(!p)return 'No lookup yet.';
+ if(p.error)return `<span style="color:#ff9aa5">${esc(p.error)}</span>`;
+
+ const sections=[];
+ const t=p.tcgdex;
+ if(t?.matched){
+   const tp=t.pricing?.tcgplayer||{};
+   const cm=t.pricing?.cardmarket||{};
+   const variant=t.bestVariant||{};
+   sections.push(`<div class="listingCard">
+    <div class="row space"><div><b>TCGdex match</b><div class="tiny muted">${esc(t.matched.name||'')} • ${esc(t.matched.set||'')} • #${esc(t.matched.number||'')}</div></div><span class="status good">${Math.round((t.confidence||0)*100)}% match</span></div>
+    <div class="pricegrid" style="margin-top:8px">
+      <div class="pricebox"><span class="tiny muted">TCGplayer Market</span><b>${money(variant.marketPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">TCGplayer Low</span><b>${money(variant.lowPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">TCGplayer Mid</span><b>${money(variant.midPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">TCGplayer High</span><b>${money(variant.highPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">Cardmarket Trend</span><b>${money(cm.trend,cm.unit||'EUR')}</b></div>
+      <div class="pricebox"><span class="tiny muted">Cardmarket 30d Avg</span><b>${money(cm.avg30,cm.unit||'EUR')}</b></div>
+    </div>
+    <div class="tiny muted" style="margin-top:7px">Variant used: ${esc(t.variantLabel||'best available')}</div>
+   </div>`);
+ } else {
+   sections.push(`<div class="listingCard"><b>TCGdex</b><div class="tiny muted">${esc(t?.message||'No reliable card match found.')}</div></div>`);
+ }
+
+ const pp=p.pokemonPriceTracker;
+ if(pp?.configured===false){
+   sections.push(`<div class="listingCard"><div class="row space"><b>Graded values</b><span class="status warn">Key needed</span></div>
+    <div class="tiny muted">PokémonPriceTracker free tier supports graded eBay-derived values. Add POKEMON_PRICE_TRACKER_API_KEY in Netlify to enable it.</div></div>`);
+ } else if(pp?.error){
+   sections.push(`<div class="listingCard"><b>PokémonPriceTracker</b><div class="tiny" style="color:#ff9aa5">${esc(pp.error)}</div></div>`);
+ } else if(pp?.card){
+   const c=pp.card;
+   const raw=c.prices||{};
+   const grades=c.ebay?.salesByGrade||c.ebay?.sales_by_grade||{};
+   const gradeRows=Object.entries(grades)
+     .map(([k,v])=>({label:(v?.grade||k).toString().toUpperCase(), price:v?.smartMarketPrice??v?.smart_market_price??v?.medianPrice??v?.median_price??v?.averagePrice??v?.average_price, sales:v?.salesCount??v?.sales_count}))
+     .filter(x=>x.price!=null)
+     .sort((a,b)=>String(a.label).localeCompare(String(b.label),undefined,{numeric:true}))
+     .slice(0,14);
+   sections.push(`<div class="listingCard">
+    <div class="row space"><div><b>PokémonPriceTracker</b><div class="tiny muted">${esc(c.name||'')} • ${esc(c.setName||c.set_name||'')} • #${esc(c.cardNumber||c.card_number||'')}</div></div><span class="status good">graded</span></div>
+    <div class="pricegrid" style="margin-top:8px">
+      <div class="pricebox"><span class="tiny muted">Raw Market</span><b>${money(raw.market??c.marketPrice??c.market_price,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">Raw Low</span><b>${money(raw.low??c.lowPrice??c.low_price,'USD')}</b></div>
+    </div>
+    ${gradeRows.length?`<div style="margin-top:9px"><b class="tiny">Graded market values</b><div class="pricegrid" style="margin-top:6px">${gradeRows.map(g=>`<div class="pricebox"><span class="tiny muted">${esc(g.label)}${g.sales!=null?` • ${g.sales} sales`:''}</span><b>${money(g.price,'USD')}</b></div>`).join('')}</div></div>`:'<div class="tiny muted" style="margin-top:8px">No graded values returned for this match.</div>'}
+   </div>`);
+ }
+ return sections.join('');
+}
+async function lookupMarkets(c){
+ const i=c.identification;
+ try{
+   return await apiJson('/api/markets',{method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({name:i.name,number:i.collector_number,setName:i.set_name,variant:i.variant,language:i.language})});
+ }catch(e){return {error:e.message}}
+}
+async function marketLookupDraft(){
+ const c=current();if(!c)return;
+ draftMarkets.innerHTML='Checking market sources…';
+ c.pricing=await lookupMarkets(c);save();renderDraftMarkets();
+}
+function renderDraftMarkets(){
+ const c=current();
+ if(document.getElementById('draftMarkets'))draftMarkets.innerHTML=marketsHtml(c?.pricing);
+}
+function confirmDraft(){const c=current();if(!c)return;c.identification.name=dName.value.trim()||c.identification.name;c.group=dGroup.value;c.sku=uid().toUpperCase();c.status='Inventory';state.inventory.unshift(c);state.drafts.splice(draftIndex,1);if(draftIndex>=state.drafts.length)draftIndex=Math.max(0,state.drafts.length-1);save();renderDraft();toast('Confirmed to inventory')}
+let invFilter='all';
+function setInvFilter(f,el){invFilter=f;document.querySelectorAll('[data-ifilter]').forEach(b=>b.classList.toggle('active',b===el));renderInventory()}
+function cardDisplayValue(c){
+ const t=c.pricing?.tcgdex?.bestVariant?.marketPrice;
+ const p=c.pricing?.pokemonPriceTracker?.card?.prices?.market??c.pricing?.pokemonPriceTracker?.card?.marketPrice;
+ const v=t??p;return v!=null?money(v,'USD'):'Price not loaded';
+}
+function renderInventory(){
+ const q=(document.getElementById('invSearch')?.value||'').toLowerCase().trim();
+ let rows=state.inventory.map((c,idx)=>({c,idx})).filter(({c})=>{
+   const listed=(c.listings||[]).some(x=>x.status==='Listed');
+   if(invFilter==='listed'&&!listed)return false;
+   if(invFilter==='unlisted'&&listed)return false;
+   if(invFilter==='research'&&c.group!=='Needs Research')return false;
+   const blob=[c.identification?.name,c.identification?.set_name,c.identification?.collector_number,c.sku,c.group].join(' ').toLowerCase();
+   return !q||blob.includes(q);
+ });
+ inventoryList.innerHTML=rows.length?rows.map(({c,idx})=>{
+   const listed=(c.listings||[]).some(x=>x.status==='Listed');
+   return `<div class="invCard clickable" onclick="openManager(${idx})"><img src="${c.front}"><div><h3>${esc(c.identification.name)}</h3><div class="meta">${esc(c.identification.set_name)} · ${esc(c.identification.collector_number)}</div><div class="meta">${esc(c.group)} · ${esc(c.sku||'No SKU')}</div><div class="value">${cardDisplayValue(c)}</div></div><div><span class="status ${listed?'good':''}">${listed?'Listed':'Unlisted'}</span><div class="chev">›</div></div></div>`
+ }).join(''):`<div class="empty"><b>${state.inventory.length?'No matches':'Inventory is empty'}</b>${state.inventory.length?'Try another search or filter.':'Confirm reviewed cards to add them here.'}</div>`;
+}
+function fileData(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
+async function importPair(){const f=frontFile.files[0],b=backFile.files[0];if(!f||!b)return toast('Choose both front and back');const [front,back]=await Promise.all([fileData(f),fileData(b)]);state.images.unshift({id:uid(),front,back,selected:true,source:'physical_scan'});save();go('images');toast('Real scan pair added')}
+
+let managerIndex=-1;
+function openManager(idx){
+ managerIndex=idx;const c=state.inventory[idx];if(!c)return;
+ c.quantity=c.quantity||1;c.location=c.location||'';c.cost=c.cost??'';c.condition=c.condition||'Near Mint';c.notes=c.notes||'';
+ c.ask=c.ask??'';c.shipping=c.shipping||'PWE - $1.25';c.listings=c.listings||[];
+ const i=c.identification;
+ mHeading.textContent='Manage Inventory';
+ mSub.textContent=c.sku||'';
+ mFront.src=c.front;mBack.src=c.back;mName.textContent=i.name;mMeta.textContent=`${i.set_name} • ${i.collector_number} • ${i.variant||''}`;
+ mSku.value=c.sku||'';mGroup.value=c.group||'Raw Singles';mLocation.value=c.location;mQty.value=c.quantity;mCost.value=c.cost;mCondition.value=c.condition;mNotes.value=c.notes;
+ mTitle.value=c.listingTitle||`${i.name} ${i.collector_number} ${i.set_name} Pokemon Card ${i.variant||''}`.replace(/\s+/g,' ').trim();
+ mDesc.value=c.listingDescription||`Front and back images shown. Condition: ${c.condition}. Please review images for exact condition.`;
+ mAsk.value=c.ask;mShipping.value=c.shipping;mEbay.checked=c.ebay!==false;mTcg.checked=c.tcg!==false;
+ mMarkets.innerHTML=marketsHtml(c.pricing);renderManagerListings();manager.classList.add('show');
+}
+function closeManager(){manager.classList.remove('show');managerIndex=-1;renderInventory()}
+function saveManager(){
+ const c=state.inventory[managerIndex];if(!c)return;
+ c.sku=mSku.value;c.group=mGroup.value;c.location=mLocation.value;c.quantity=+mQty.value||1;c.cost=mCost.value;c.condition=mCondition.value;c.notes=mNotes.value;
+ c.listingTitle=mTitle.value;c.listingDescription=mDesc.value;c.ask=mAsk.value;c.shipping=mShipping.value;c.ebay=mEbay.checked;c.tcg=mTcg.checked;
+ save();toast('Inventory item saved');renderInventory();
+}
+async function marketLookupManager(){
+ const c=state.inventory[managerIndex];if(!c)return;
+ mMarkets.innerHTML='Checking market sources…';
+ c.pricing=await lookupMarkets(c);save();mMarkets.innerHTML=marketsHtml(c.pricing);
+}
+function simulateListing(platform){
+ const c=state.inventory[managerIndex];if(!c)return;saveManager();
+ const listing={id:'SIM-'+Date.now().toString(36).toUpperCase(),platform,status:'Listed',title:c.listingTitle,price:Number(c.ask||0),quantity:c.quantity,shipping:c.shipping,created:new Date().toISOString()};
+ c.listings=c.listings||[];c.listings.unshift(listing);save();renderManagerListings();toast(`${platform} listing simulated`);
+}
+function renderManagerListings(){
+ const c=state.inventory[managerIndex];if(!c)return;
+ mListings.innerHTML=(c.listings||[]).length?`<h3 style="margin-top:14px">Listing records</h3>`+(c.listings||[]).map(x=>`<div class="listingCard"><div class="row space"><b>${esc(x.platform)}</b><span class="status good">${esc(x.status)}</span></div><div>${esc(x.title)}</div><div class="tiny muted">$${Number(x.price||0).toFixed(2)} • ${esc(x.shipping)} • ${esc(x.id)}</div><button class="btn ghost" style="margin-top:7px" onclick="endListing('${x.id}')">Simulate End Listing</button></div>`).join(''):'';
+}
+function endListing(id){const c=state.inventory[managerIndex];const x=(c.listings||[]).find(y=>y.id===id);if(x)x.status='Ended';save();renderManagerListings();renderInventory()}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+stats();status();renderInventory();
+</script></body></html>

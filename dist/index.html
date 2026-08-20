@@ -546,28 +546,77 @@ function saveFinanceSettings(){
  state.financeSettings={salesTaxRate:num(fTaxRate.value),platformFeeRate:num(fFeeRate.value),platformFeeFixed:num(fFeeFixed.value),defaultPackagingCost:num(fPackDefault.value),startingCash:num(fStartingCash.value)};
  save();toast('Bookkeeping defaults saved');
 }
-function marketsHtml(p){
+function printingFromVariant(label=''){
+ const s=String(label||'').toLowerCase();
+ if(s.includes('1st')||s.includes('first'))return '1st Edition';
+ if(s.includes('unlimited')||s.includes('normal'))return 'Unlimited';
+ return '';
+}
+function pptRawVariant(card,variantLabel){
+ const printing=printingFromVariant(variantLabel)||card?.prices?.primaryPrinting||'';
+ const variant=card?.variants?.[printing];
+ const nested=card?.prices?.variants?.[printing];
+ let nestedPrice=null;
+ if(nested&&typeof nested==='object'){
+   const first=Object.values(nested).find(v=>v&&typeof v==='object'&&v.price!=null);
+   nestedPrice=first?.price;
+ }
+ return {printing,market:variant?.marketPrice??nestedPrice,low:variant?.lowPrice};
+}
+function gradeInfo(key,v){
+ const m=String(key).match(/^([a-z]+)(\d+)(?:_(\d))?$/i);
+ if(!m||String(key).toLowerCase()==='ungraded')return null;
+ const grade=Number(`${m[2]}${m[3]?'.'+m[3]:''}`);
+ const grader=m[1].toUpperCase();
+ const price=v?.smartMarketPrice?.price??v?.smart_market_price?.price??v?.smartMarketPrice??v?.smart_market_price??v?.medianPrice??v?.median_price??v?.averagePrice??v?.average_price;
+ if(price==null)return null;
+ return {
+   key,grader,grade,label:`${grader} ${grade}`,
+   price,sales:v?.count??v?.salesCount??v?.sales_count,
+   confidence:v?.smartMarketPrice?.confidence??v?.smart_market_price?.confidence,
+   lastSale:v?.lastSaleDate||v?.last_sale_date
+ };
+}
+function gradeRowsForCard(p,card){
+ const grades=p?.pokemonPriceTracker?.card?.ebay?.salesByGrade||p?.pokemonPriceTracker?.card?.ebay?.sales_by_grade||{};
+ const rows=Object.entries(grades).map(([k,v])=>gradeInfo(k,v)).filter(Boolean);
+ const a=card?.appraisal;
+ const low=num(a?.grade_low),high=num(a?.grade_high),hasRange=low||high;
+ const mid=hasRange?(low+high)/2:null;
+ const pref={PSA:0,CGC:1,BGS:2,SGC:3,TAG:4,ACE:5};
+ rows.sort((x,y)=>{
+   if(mid!=null){
+     const xin=x.grade>=low&&x.grade<=high,yin=y.grade>=low&&y.grade<=high;
+     if(xin!==yin)return xin?-1:1;
+     if(xin&&yin){
+       const px=pref[x.grader]??9,py=pref[y.grader]??9;
+       if(px!==py)return px-py;
+     }
+     const dx=Math.abs(x.grade-mid),dy=Math.abs(y.grade-mid);
+     if(dx!==dy)return dx-dy;
+   }
+   const px=pref[x.grader]??9,py=pref[y.grader]??9;
+   if(px!==py)return px-py;
+   return num(y.sales)-num(x.sales);
+ });
+ return {rows,hasRange,rangeLabel:hasRange?`${low||'?'}-${high||'?'}`:''};
+}
+function marketsHtml(p,card=null){
  if(!p)return 'No lookup yet.';
  if(p.error)return `<span style="color:#ff9aa5">${esc(p.error)}</span>`;
 
  const sections=[];
  const t=p.tcgdex;
  if(t?.matched){
-   const tp=t.pricing?.tcgplayer||{};
    const cm=t.pricing?.cardmarket||{};
    const variant=t.bestVariant||{};
    sections.push(`<div class="listingCard">
-    <div class="row space"><div><b>Raw TCGdex match</b><div class="tiny muted">${esc(t.matched.name||'')} • ${esc(t.matched.set||'')} • #${esc(t.matched.number||'')}</div></div><span class="status good">${Math.round((t.confidence||0)*100)}% match</span></div>
+    <div class="row space"><div><b>Selected raw match</b><div class="tiny muted">${esc(t.matched.name||'')} • ${esc(t.matched.set||'')} • #${esc(t.matched.number||'')} • ${esc(t.variantLabel||'best available')}</div></div><span class="status good">${Math.round((t.confidence||0)*100)}%</span></div>
     <div class="pricegrid" style="margin-top:8px">
-      <div class="pricebox"><span class="tiny muted">TCGplayer Market</span><b>${money(variant.marketPrice,'USD')}</b></div>
-      <div class="pricebox"><span class="tiny muted">TCGplayer Direct Low</span><b>${money(variant.directLowPrice,'USD')}</b></div>
-      <div class="pricebox"><span class="tiny muted">TCGplayer Low</span><b>${money(variant.lowPrice,'USD')}</b></div>
-      <div class="pricebox"><span class="tiny muted">TCGplayer Mid</span><b>${money(variant.midPrice,'USD')}</b></div>
-      <div class="pricebox"><span class="tiny muted">TCGplayer High</span><b>${money(variant.highPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">Raw market</span><b>${money(variant.marketPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">Direct low</span><b>${money(variant.directLowPrice??variant.lowPrice,'USD')}</b></div>
       <div class="pricebox"><span class="tiny muted">Cardmarket Trend</span><b>${money(cm.trend,cm.unit||'EUR')}</b></div>
-      <div class="pricebox"><span class="tiny muted">Cardmarket 30d Avg</span><b>${money(cm.avg30,cm.unit||'EUR')}</b></div>
     </div>
-    <div class="tiny muted" style="margin-top:7px">Variant used: ${esc(t.variantLabel||'best available')}</div>
    </div>`);
  } else {
    sections.push(`<div class="listingCard"><b>TCGdex</b><div class="tiny muted">${esc(t?.message||'No reliable card match found.')}</div></div>`);
@@ -581,20 +630,17 @@ function marketsHtml(p){
    sections.push(`<div class="listingCard"><b>PokémonPriceTracker</b><div class="tiny" style="color:#ff9aa5">${esc(pp.error)}</div></div>`);
  } else if(pp?.card){
    const c=pp.card;
-   const raw=c.prices||{};
-   const grades=c.ebay?.salesByGrade||c.ebay?.sales_by_grade||{};
-   const gradeRows=Object.entries(grades)
-     .map(([k,v])=>({label:(v?.grade||k).toString().toUpperCase(), price:v?.smartMarketPrice??v?.smart_market_price??v?.medianPrice??v?.median_price??v?.averagePrice??v?.average_price, sales:v?.salesCount??v?.sales_count}))
-     .filter(x=>x.price!=null)
-     .sort((a,b)=>String(a.label).localeCompare(String(b.label),undefined,{numeric:true}))
-     .slice(0,14);
+   const selectedRaw=pptRawVariant(c,t?.variantLabel);
+   const graded=gradeRowsForCard(p,card);
+   const shown=graded.rows.slice(0,8);
    sections.push(`<div class="listingCard">
-    <div class="row space"><div><b>PokémonPriceTracker</b><div class="tiny muted">${esc(c.name||'')} • ${esc(c.setName||c.set_name||'')} • #${esc(c.cardNumber||c.card_number||'')}</div></div><span class="status good">graded</span></div>
+    <div class="row space"><div><b>Graded comps for this card</b><div class="tiny muted">${esc(c.name||'')} • ${esc(c.setName||c.set_name||'')} • #${esc(c.cardNumber||c.card_number||'')}</div></div><span class="status good">eBay sold</span></div>
     <div class="pricegrid" style="margin-top:8px">
-      <div class="pricebox"><span class="tiny muted">Raw Market</span><b>${money(raw.market??c.marketPrice??c.market_price,'USD')}</b></div>
-      <div class="pricebox"><span class="tiny muted">Raw Low</span><b>${money(raw.low??c.lowPrice??c.low_price,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">PPT raw ${esc(selectedRaw.printing||'selected')}</span><b>${money(selectedRaw.market,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">${graded.hasRange?'AI grade range':'Run appraisal'}</span><b>${graded.hasRange?esc(graded.rangeLabel):'No range yet'}</b></div>
     </div>
-    ${gradeRows.length?`<div style="margin-top:9px"><b class="tiny">Graded market values</b><div class="pricegrid" style="margin-top:6px">${gradeRows.map(g=>`<div class="pricebox"><span class="tiny muted">${esc(g.label)}${g.sales!=null?` • ${g.sales} sales`:''}</span><b>${money(g.price,'USD')}</b></div>`).join('')}</div></div>`:'<div class="tiny muted" style="margin-top:8px">No graded values returned for this match.</div>'}
+    ${shown.length?`<div style="margin-top:9px"><b class="tiny">${graded.hasRange?'Closest graded comps':'Common graded comps'}</b><div class="pricegrid" style="margin-top:6px">${shown.map(g=>`<div class="pricebox"><span class="tiny muted">${esc(g.label)}${g.sales!=null?` • ${g.sales} sales`:''}${g.confidence?` • ${esc(g.confidence)}`:''}</span><b>${money(g.price,'USD')}</b></div>`).join('')}</div></div>`:'<div class="tiny muted" style="margin-top:8px">No graded values returned for this selected card.</div>'}
+    <div class="tiny muted" style="margin-top:8px">Pricing is filtered to the matched card identity. Graded rows are sold-comp estimates from Pokémon Price Tracker, sorted toward the AI grade range when available.</div>
    </div>`);
  }
  return sections.join('');
@@ -613,7 +659,7 @@ async function marketLookupDraft(){
 }
 function renderDraftMarkets(){
  const c=current();
- if(document.getElementById('draftMarkets'))draftMarkets.innerHTML=marketsHtml(c?.pricing);
+ if(document.getElementById('draftMarkets'))draftMarkets.innerHTML=marketsHtml(c?.pricing,c);
 }
 function confirmDraft(){const c=current();if(!c)return;c.identification.name=dName.value.trim()||c.identification.name;c.group=dGroup.value;c.sku=uid().toUpperCase();c.itemType=c.itemType||defaultItemType(c);c.inventoryStage='Available';c.status='Inventory';c.saleStatus='Available';c.fulfillmentStatus='Available';event(c,'inventory_added','Confirmed into sellable inventory');state.inventory.unshift(c);state.drafts.splice(draftIndex,1);if(draftIndex>=state.drafts.length)draftIndex=Math.max(0,state.drafts.length-1);save();renderDraft();toast('Confirmed to inventory')}
 
@@ -782,7 +828,7 @@ function openManager(idx){
  mTitle.value=c.listingTitle||`${i.name} ${i.collector_number} ${i.set_name} Pokemon Card ${i.variant||''}`.replace(/\s+/g,' ').trim();
  mDesc.value=c.listingDescription||`Front and back images shown. Condition: ${c.condition}. Please review images for exact condition.`;
  mAsk.value=c.ask;mShipping.value=c.shipping;mEbay.checked=c.ebay!==false;mTcg.checked=c.tcg!==false;
- mMarkets.innerHTML=marketsHtml(c.pricing);renderManagerListings();renderManagerFulfillment();renderTimeline();manager.classList.add('show');
+ mMarkets.innerHTML=marketsHtml(c.pricing,c);renderManagerListings();renderManagerFulfillment();renderTimeline();manager.classList.add('show');
 }
 function closeManager(){manager.classList.remove('show');managerIndex=-1;renderInventory()}
 function saveManager(){
@@ -799,7 +845,7 @@ function saveManager(){
 async function marketLookupManager(){
  const c=state.inventory[managerIndex];if(!c)return;
  mMarkets.innerHTML='Checking market sources…';
- c.pricing=await lookupMarkets(c);save();mMarkets.innerHTML=marketsHtml(c.pricing);
+ c.pricing=await lookupMarkets(c);save();mMarkets.innerHTML=marketsHtml(c.pricing,c);
 }
 function simulateListing(platform){
  const c=state.inventory[managerIndex];if(!c)return;saveManager();

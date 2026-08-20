@@ -130,7 +130,7 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
     </div>
     <div id="appraisal" class="hidden"></div>
     <div class="card">
-      <div class="row space"><div><b>Market Intelligence</b><div class="tiny muted">TCGplayer · Cardmarket · graded</div></div><button class="btn ghost" onclick="marketLookupDraft()">Refresh</button></div>
+      <div class="row space"><div><b>Pricing</b><div class="tiny muted">Raw value · PSA grade ladder</div></div><button class="btn ghost" onclick="marketLookupDraft()">Refresh</button></div>
       <div id="draftMarkets" class="tiny muted" style="margin-top:9px">Tap Refresh when the match is confirmed.</div>
     </div>
     <div class="card"><div class="field" style="margin:0"><label>INVENTORY GROUP</label><select id="dGroup"><option>High Value Singles</option><option>Raw Singles</option><option>Modern Hits</option><option>Vintage</option><option>Bulk / Low Value</option><option>Holo / Reverse Holo</option><option>Promos</option><option>Needs Research</option></select></div></div>
@@ -220,7 +220,7 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
       </div>
     </div>
 
-    <div class="card"><div class="row space"><h3>Market Intelligence</h3><button class="btn ghost" onclick="marketLookupManager()">Lookup</button></div>
+    <div class="card"><div class="row space"><h3>Pricing</h3><button class="btn ghost" onclick="marketLookupManager()">Lookup</button></div>
       <div id="mMarkets" class="muted tiny">No lookup yet.</div>
     </div>
 
@@ -563,6 +563,12 @@ function pptRawVariant(card,variantLabel){
  }
  return {printing,market:variant?.marketPrice??nestedPrice,low:variant?.lowPrice};
 }
+function rawMarketValueFromPricing(p){
+ const t=p?.tcgdex?.bestVariant||{};
+ const pptCard=p?.pokemonPriceTracker?.card;
+ const raw=pptCard?pptRawVariant(pptCard,p?.tcgdex?.variantLabel):{};
+ return t.marketPrice??raw.market??t.directLowPrice??t.lowPrice??raw.low;
+}
 function gradeInfo(key,v){
  const m=String(key).match(/^([a-z]+)(\d+)(?:_(\d))?$/i);
  if(!m||String(key).toLowerCase()==='ungraded')return null;
@@ -577,29 +583,40 @@ function gradeInfo(key,v){
    lastSale:v?.lastSaleDate||v?.last_sale_date
  };
 }
-function gradeRowsForCard(p,card){
- const grades=p?.pokemonPriceTracker?.card?.ebay?.salesByGrade||p?.pokemonPriceTracker?.card?.ebay?.sales_by_grade||{};
- const rows=Object.entries(grades).map(([k,v])=>gradeInfo(k,v)).filter(Boolean);
+function appraisalGradeRange(card){
  const a=card?.appraisal;
- const low=num(a?.grade_low),high=num(a?.grade_high),hasRange=low||high;
- const mid=hasRange?(low+high)/2:null;
- const pref={PSA:0,CGC:1,BGS:2,SGC:3,TAG:4,ACE:5};
- rows.sort((x,y)=>{
-   if(mid!=null){
-     const xin=x.grade>=low&&x.grade<=high,yin=y.grade>=low&&y.grade<=high;
-     if(xin!==yin)return xin?-1:1;
-     if(xin&&yin){
-       const px=pref[x.grader]??9,py=pref[y.grader]??9;
-       if(px!==py)return px-py;
-     }
-     const dx=Math.abs(x.grade-mid),dy=Math.abs(y.grade-mid);
-     if(dx!==dy)return dx-dy;
-   }
-   const px=pref[x.grader]??9,py=pref[y.grader]??9;
-   if(px!==py)return px-py;
-   return num(y.sales)-num(x.sales);
- });
- return {rows,hasRange,rangeLabel:hasRange?`${low||'?'}-${high||'?'}`:''};
+ const low=num(a?.grade_low),high=num(a?.grade_high);
+ const hasRange=low||high;
+ const min=low||high,max=high||low;
+ return {low:min,high:max,hasRange,label:hasRange?`${low||'?'}-${high||'?'}`:''};
+}
+function psaRowsForCard(p,card){
+ const grades=p?.pokemonPriceTracker?.card?.ebay?.salesByGrade||p?.pokemonPriceTracker?.card?.ebay?.sales_by_grade||{};
+ const range=appraisalGradeRange(card);
+ const rows=Object.entries(grades).map(([k,v])=>gradeInfo(k,v)).filter(g=>g?.grader==='PSA');
+ rows.forEach(g=>{g.highlight=range.hasRange&&g.grade>=range.low&&g.grade<=range.high});
+ rows.sort((x,y)=>y.grade-x.grade);
+ return {...range,rows};
+}
+function setPriceFromMarket(value){
+ const price=num(value);
+ if(!price)return toast('No raw price available');
+ const ask=price.toFixed(2);
+ const managerOpen=document.getElementById('manager')?.classList.contains('show');
+ if(managerOpen&&managerIndex>=0){
+   const c=state.inventory[managerIndex];if(!c)return;
+   c.ask=ask;
+   const input=document.getElementById('mAsk');if(input)input.value=ask;
+   save();renderInventory();toast(`Ask set to ${money(price)}`);
+   return;
+ }
+ const c=current?.();
+ if(c){
+   c.ask=ask;
+   save();toast(`Draft ask set to ${money(price)}`);
+   return;
+ }
+ toast('Open a card first');
 }
 function marketsHtml(p,card=null){
  if(!p)return 'No lookup yet.';
@@ -607,13 +624,15 @@ function marketsHtml(p,card=null){
 
  const sections=[];
  const t=p.tcgdex;
+ const rawSetPrice=rawMarketValueFromPricing(p);
+ const setPriceButton=rawSetPrice!=null?`<button class="btn ghost full" style="margin-top:8px" onclick="setPriceFromMarket(${Number(rawSetPrice)})">Set price</button>`:'';
  if(t?.matched){
    const cm=t.pricing?.cardmarket||{};
    const variant=t.bestVariant||{};
    sections.push(`<div class="listingCard">
     <div class="row space"><div><b>Selected raw match</b><div class="tiny muted">${esc(t.matched.name||'')} • ${esc(t.matched.set||'')} • #${esc(t.matched.number||'')} • ${esc(t.variantLabel||'best available')}</div></div><span class="status good">${Math.round((t.confidence||0)*100)}%</span></div>
     <div class="pricegrid" style="margin-top:8px">
-      <div class="pricebox"><span class="tiny muted">Raw market</span><b>${money(variant.marketPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">Raw market</span><b>${money(variant.marketPrice??rawSetPrice,'USD')}</b>${setPriceButton}</div>
       <div class="pricebox"><span class="tiny muted">Direct low</span><b>${money(variant.directLowPrice??variant.lowPrice,'USD')}</b></div>
       <div class="pricebox"><span class="tiny muted">Cardmarket Trend</span><b>${money(cm.trend,cm.unit||'EUR')}</b></div>
     </div>
@@ -631,16 +650,15 @@ function marketsHtml(p,card=null){
  } else if(pp?.card){
    const c=pp.card;
    const selectedRaw=pptRawVariant(c,t?.variantLabel);
-   const graded=gradeRowsForCard(p,card);
-   const shown=graded.rows.slice(0,8);
+   const psa=psaRowsForCard(p,card);
    sections.push(`<div class="listingCard">
-    <div class="row space"><div><b>Graded comps for this card</b><div class="tiny muted">${esc(c.name||'')} • ${esc(c.setName||c.set_name||'')} • #${esc(c.cardNumber||c.card_number||'')}</div></div><span class="status good">eBay sold</span></div>
+    <div class="row space"><div><b>PSA values for this card</b><div class="tiny muted">${esc(c.name||'')} • ${esc(c.setName||c.set_name||'')} • #${esc(c.cardNumber||c.card_number||'')}</div></div><span class="status good">eBay sold</span></div>
     <div class="pricegrid" style="margin-top:8px">
-      <div class="pricebox"><span class="tiny muted">PPT raw ${esc(selectedRaw.printing||'selected')}</span><b>${money(selectedRaw.market,'USD')}</b></div>
-      <div class="pricebox"><span class="tiny muted">${graded.hasRange?'AI grade range':'Run appraisal'}</span><b>${graded.hasRange?esc(graded.rangeLabel):'No range yet'}</b></div>
+      <div class="pricebox"><span class="tiny muted">PPT raw ${esc(selectedRaw.printing||'selected')}</span><b>${money(selectedRaw.market,'USD')}</b>${selectedRaw.market!=null&&!setPriceButton?`<button class="btn ghost full" style="margin-top:8px" onclick="setPriceFromMarket(${Number(selectedRaw.market)})">Set price</button>`:''}</div>
+      <div class="pricebox"><span class="tiny muted">${psa.hasRange?'Highlighted PSA grade(s)':'Run appraisal'}</span><b>${psa.hasRange?esc(psa.label):'No range yet'}</b></div>
     </div>
-    ${shown.length?`<div style="margin-top:9px"><b class="tiny">${graded.hasRange?'Closest graded comps':'Common graded comps'}</b><div class="pricegrid" style="margin-top:6px">${shown.map(g=>`<div class="pricebox"><span class="tiny muted">${esc(g.label)}${g.sales!=null?` • ${g.sales} sales`:''}${g.confidence?` • ${esc(g.confidence)}`:''}</span><b>${money(g.price,'USD')}</b></div>`).join('')}</div></div>`:'<div class="tiny muted" style="margin-top:8px">No graded values returned for this selected card.</div>'}
-    <div class="tiny muted" style="margin-top:8px">Pricing is filtered to the matched card identity. Graded rows are sold-comp estimates from Pokémon Price Tracker, sorted toward the AI grade range when available.</div>
+    ${psa.rows.length?`<div style="margin-top:9px"><b class="tiny">PSA grade values</b><div class="pricegrid" style="margin-top:6px">${psa.rows.map(g=>`<div class="pricebox" style="${g.highlight?'outline:2px solid var(--accent);background:#172032':''}"><span class="tiny muted">${g.highlight?'AI range • ':''}${esc(g.label)}${g.sales!=null?` • ${g.sales} sales`:''}${g.confidence?` • ${esc(g.confidence)}`:''}</span><b>${money(g.price,'USD')}</b></div>`).join('')}</div></div>`:'<div class="tiny muted" style="margin-top:8px">No PSA graded values returned for this selected card.</div>'}
+    <div class="tiny muted" style="margin-top:8px">Pricing is filtered to the matched card identity. PSA rows are sold-comp estimates from Pokémon Price Tracker; highlighted rows overlap the AI appraisal range.</div>
    </div>`);
  }
  return sections.join('');
@@ -779,14 +797,12 @@ function placeCheckoutOrder(){
 let invFilter='all';
 function setInvFilter(f,el){invFilter=f;document.querySelectorAll('[data-ifilter]').forEach(b=>b.classList.toggle('active',b===el));renderInventory()}
 function cardDisplayValue(c){
- const t=c.pricing?.tcgdex?.bestVariant?.marketPrice;
- const p=c.pricing?.pokemonPriceTracker?.card?.prices?.market??c.pricing?.pokemonPriceTracker?.card?.marketPrice;
- const v=t??p;return v!=null?money(v,'USD'):'Price not loaded';
+ const v=rawMarketValueFromPricing(c.pricing);
+ return v!=null?money(v,'USD'):'Price not loaded';
 }
 function cardValueNumber(c){
- const t=c.pricing?.tcgdex?.bestVariant?.marketPrice;
- const p=c.pricing?.pokemonPriceTracker?.card?.prices?.market??c.pricing?.pokemonPriceTracker?.card?.marketPrice;
- return num(t??p??c.ask??c.cost);
+ const v=rawMarketValueFromPricing(c.pricing);
+ return num(v??c.ask??c.cost);
 }
 function renderInventory(){
  const q=(document.getElementById('invSearch')?.value||'').toLowerCase().trim();

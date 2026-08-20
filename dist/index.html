@@ -53,7 +53,7 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
 </head>
 <body>
 <div class="app">
-<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.3</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
+<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.4</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
 <main class="content">
 <section id="home" class="section active">
   <div class="hero"><div class="eyebrow">Workspace</div><h1>Turn scans into sellable inventory.</h1><p>Capture, identify, review, price and stage listings without losing track of where anything is.</p></div>
@@ -500,9 +500,10 @@ function marketsHtml(p){
    const cm=t.pricing?.cardmarket||{};
    const variant=t.bestVariant||{};
    sections.push(`<div class="listingCard">
-    <div class="row space"><div><b>TCGdex match</b><div class="tiny muted">${esc(t.matched.name||'')} • ${esc(t.matched.set||'')} • #${esc(t.matched.number||'')}</div></div><span class="status good">${Math.round((t.confidence||0)*100)}% match</span></div>
+    <div class="row space"><div><b>Raw TCGdex match</b><div class="tiny muted">${esc(t.matched.name||'')} • ${esc(t.matched.set||'')} • #${esc(t.matched.number||'')}</div></div><span class="status good">${Math.round((t.confidence||0)*100)}% match</span></div>
     <div class="pricegrid" style="margin-top:8px">
       <div class="pricebox"><span class="tiny muted">TCGplayer Market</span><b>${money(variant.marketPrice,'USD')}</b></div>
+      <div class="pricebox"><span class="tiny muted">TCGplayer Direct Low</span><b>${money(variant.directLowPrice,'USD')}</b></div>
       <div class="pricebox"><span class="tiny muted">TCGplayer Low</span><b>${money(variant.lowPrice,'USD')}</b></div>
       <div class="pricebox"><span class="tiny muted">TCGplayer Mid</span><b>${money(variant.midPrice,'USD')}</b></div>
       <div class="pricebox"><span class="tiny muted">TCGplayer High</span><b>${money(variant.highPrice,'USD')}</b></div>

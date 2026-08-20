@@ -13,13 +13,19 @@ function chooseTcgVariant(card,variantHint=""){
  const entries=Object.entries(p).filter(([k,v])=>v&&typeof v==="object"&&k!=="updated");
  if(!entries.length)return {label:null,data:{}};
  const hint=norm(variantHint);
+ const wantsFirst=/(^| )(1st|first)( |$)/.test(hint)||hint.includes("1st edition")||hint.includes("first edition");
+ const wantsUnlimited=hint.includes("unlimited");
+ const wantsReverse=hint.includes("reverse");
+ const wantsHolo=hint.includes("holo")&&!wantsReverse;
  const score=([k])=>{
    const n=norm(k);
    let s=0;
-   if(hint.includes("reverse")&&n.includes("reverse"))s+=5;
-   if(hint.includes("holo")&&!hint.includes("reverse")&&n.includes("holo")&&!n.includes("reverse"))s+=4;
-   if(hint.includes("1st")&&n.includes("1st"))s+=5;
-   if(hint.includes("unlimited")&&n.includes("unlimited"))s+=5;
+   if(wantsReverse&&n.includes("reverse"))s+=8;
+   if(wantsHolo&&n.includes("holo")&&!n.includes("reverse"))s+=6;
+   if(wantsFirst&&n.includes("1st"))s+=10;
+   if(wantsUnlimited&&n.includes("unlimited"))s+=10;
+   if(!wantsFirst&&(n.includes("unlimited")||n==="normal"))s+=6;
+   if(!wantsFirst&&n.includes("1st"))s-=6;
    if(n==="normal")s+=1;
    return s;
  };
@@ -61,7 +67,7 @@ async function tcgdexLookup(name,number,setName,variant){
  };
 }
 async function pptLookup(name,number,setName){
- const key=Netlify.env.get("POKEMON_PRICE_TRACKER_API_KEY");
+ const key=globalThis.Netlify?.env?.get?.("POKEMON_PRICE_TRACKER_API_KEY")||process.env.POKEMON_PRICE_TRACKER_API_KEY;
  if(!key)return {configured:false};
  const q=[name,setName,number?`#${numberOnly(number)}`:""].filter(Boolean).join(" ");
  const url=new URL("https://www.pokemonpricetracker.com/api/v2/cards");

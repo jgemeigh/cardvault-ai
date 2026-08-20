@@ -19,7 +19,7 @@
 .manager{position:fixed;inset:0;z-index:70;background:var(--bg);overflow:auto;padding-bottom:90px;display:none}.manager.show{display:block}
 .managerHead{position:sticky;top:0;z-index:2;background:#0d1016;border-bottom:1px solid var(--line);padding:12px;display:flex;gap:10px;align-items:center}
 .managerBody{max-width:620px;margin:auto;padding:12px}.miniimg{width:64px;height:90px;object-fit:contain;border-radius:8px;background:#080a0e}
-.listingCard{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:#11161d}.platforms{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.listingCard{border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;background:#11161d}.platforms{display:grid;grid-template-columns:1fr 1fr;gap:8px}.fulfillCard{border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:8px;background:#11161d}.timeline{border-left:2px solid #30394a;margin:10px 0 0 5px;padding-left:12px}.event{margin:0 0 9px}.event b{display:block;font-size:12px}.status.sold{background:#35264a;color:#d9c2ff}.status.hold{background:#34291e;color:#ffc992}
 .pricegrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.pricebox{background:#11161d;padding:10px;border-radius:10px}.pricebox b{display:block;font-size:16px}
 .clickable{cursor:pointer}.clickable:active{opacity:.7}
 
@@ -30,7 +30,7 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
 .hero{background:linear-gradient(145deg,#1b2230,#11151c 68%);border:1px solid #30394a;border-radius:22px;padding:18px;margin-bottom:14px}
 .eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
 .hero h1{font-size:27px;line-height:1.05;margin:7px 0 6px;letter-spacing:-.8px}.hero p{margin:0;color:var(--muted)}
-.quickrow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0 16px}.quick{background:var(--surface2);border:1px solid var(--line);border-radius:15px;padding:11px}.quick b{display:block;font-size:20px}.quick span{font-size:10px;color:var(--muted)}
+.quickrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px}.quick{background:var(--surface2);border:1px solid var(--line);border-radius:15px;padding:11px}.quick b{display:block;font-size:20px}.quick span{font-size:10px;color:var(--muted)}
 .nextCard{border:1px solid #405171;background:#172032;border-radius:18px;padding:14px;margin-bottom:12px}.nextCard .btn{margin-top:11px;width:100%}
 .sectionTitle{display:flex;justify-content:space-between;align-items:flex-end;margin:0 0 12px}.sectionTitle h2{margin:0}.sectionTitle .muted{font-size:12px}
 .toolbar{display:flex;gap:8px;margin-bottom:12px}.toolbar>*{min-width:0}.search{flex:1;background:#10141b;border:1px solid var(--line);color:#fff;border-radius:13px;padding:11px 12px}
@@ -48,11 +48,12 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
 .field input,.field select{min-height:45px}.bottom{background:#0c0f14eb;backdrop-filter:blur(18px)}.nav{min-height:54px}.nav span{font-size:20px;margin-bottom:2px}.nav.active{color:var(--accent2)}
 .badgeDot{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;background:#293449;color:#dbe5ff;border-radius:99px;font-size:10px;margin-left:3px}
 .kicker{font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:12px}.dangerText{color:#ff9ba6}
+@media(max-width:430px){.quickrow{grid-template-columns:repeat(2,1fr)}.pricegrid{grid-template-columns:1fr}.actionGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="app">
-<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.1</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
+<header class="header"><div class="brand"><div><div class="logo">CardVault</div><div class="tiny muted">Pokémon inventory workspace <span class="badgeDot">v2.2</span></div></div><div id="aiPill" class="pill">AI…</div></div></header>
 <main class="content">
 <section id="home" class="section active">
   <div class="hero"><div class="eyebrow">Workspace</div><h1>Turn scans into sellable inventory.</h1><p>Capture, identify, review, price and stage listings without losing track of where anything is.</p></div>
@@ -60,6 +61,7 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
     <div class="quick" onclick="go('images')"><b id="sImages">0</b><span>TO IDENTIFY</span></div>
     <div class="quick" onclick="go('drafts')"><b id="sDrafts">0</b><span>TO REVIEW</span></div>
     <div class="quick" onclick="go('inventory')"><b id="sInventory">0</b><span>INVENTORY</span></div>
+    <div class="quick" onclick="document.getElementById('fulfillmentPanel')?.scrollIntoView({behavior:'smooth'})"><b id="sFulfill">0</b><span>TO SHIP</span></div>
   </div>
   <div id="nextAction" class="nextCard"></div>
   <div class="sectionTitle"><h2>Quick actions</h2><span class="muted" id="sAI">—</span></div>
@@ -68,6 +70,11 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
     <button class="btn ghost" onclick="go('images')">Identify cards</button>
     <button class="btn ghost" onclick="go('drafts')">Review matches</button>
     <button class="btn ghost" onclick="go('inventory')">Manage inventory</button>
+  </div>
+  <div id="fulfillmentPanel" class="card">
+    <div class="row space"><div><h3>Orders & shipping</h3><div class="tiny muted">Simulated sales, reservations and cross-platform delisting.</div></div><span id="fulfillCount" class="status"></span></div>
+    <button class="btn ghost full" style="margin-top:8px" onclick="bundleOrders()">Bundle compatible orders</button>
+    <div id="fulfillmentList"></div>
   </div>
 </section>
 
@@ -113,7 +120,7 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
 <section id="inventory" class="section">
   <div class="sectionTitle"><div><h2>Inventory</h2><div class="kicker">Search, price, group and stage listings.</div></div><button class="btn primary" onclick="go('scan')">＋</button></div>
   <div class="toolbar"><input id="invSearch" class="search" placeholder="Search card, set, SKU…" oninput="renderInventory()"></div>
-  <div class="segment"><button class="seg active" data-ifilter="all" onclick="setInvFilter('all',this)">All</button><button class="seg" data-ifilter="unlisted" onclick="setInvFilter('unlisted',this)">Unlisted</button><button class="seg" data-ifilter="listed" onclick="setInvFilter('listed',this)">Listed</button><button class="seg" data-ifilter="research" onclick="setInvFilter('research',this)">Research</button></div>
+  <div class="segment"><button class="seg active" data-ifilter="all" onclick="setInvFilter('all',this)">All</button><button class="seg" data-ifilter="unlisted" onclick="setInvFilter('unlisted',this)">Unlisted</button><button class="seg" data-ifilter="listed" onclick="setInvFilter('listed',this)">Listed</button><button class="seg" data-ifilter="sold" onclick="setInvFilter('sold',this)">Sold</button><button class="seg" data-ifilter="research" onclick="setInvFilter('research',this)">Research</button></div>
   <div id="inventoryList" class="inventoryGrid"></div>
 </section>
 
@@ -174,6 +181,10 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
       </div>
       <div id="mListings"></div>
     </div>
+    <div class="card"><div class="row space"><h3>Fulfillment</h3><span id="mFulfillmentStatus" class="status"></span></div>
+      <div id="mFulfillment"></div>
+    </div>
+    <div class="card"><h3>Timeline</h3><div id="mTimeline" class="timeline"></div></div>
   </div><div class="managerSaveBar"><button class="btn ghost" onclick="closeManager()">Cancel</button><button class="btn good" onclick="saveManager()">Save changes</button></div>
 </div>
 
@@ -181,10 +192,12 @@ body{font-size:15px}.app{padding-bottom:92px}.header{padding:14px 16px 11px}.log
 const STORE='cardvault-v4-ai';
 const REAL_BACK='https://i.ebayimg.com/images/g/wRMAAeSw6QBpvsWE/s-l960.png';
 let state=JSON.parse(localStorage.getItem(STORE)||'{"images":[],"drafts":[],"inventory":[]}');
+state.images=state.images||[];state.drafts=state.drafts||[];state.inventory=state.inventory||[];
+state.sales=state.sales||[];state.orders=state.orders||[];state.reservations=state.reservations||[];
 let aiConfigured=false;
-function save(){localStorage.setItem(STORE,JSON.stringify(state));stats()}
+function save(){localStorage.setItem(STORE,JSON.stringify(state));stats();renderFulfillment()}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1900)}
-function go(id){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('[data-target]').forEach(x=>x.classList.toggle('active',x.dataset.target===id));if(id==='images')renderImages();if(id==='drafts')renderDraft();if(id==='inventory')renderInventory();if(id==='home')stats()}
+function go(id){document.querySelectorAll('.section').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('[data-target]').forEach(x=>x.classList.toggle('active',x.dataset.target===id));if(id==='images')renderImages();if(id==='drafts')renderDraft();if(id==='inventory')renderInventory();if(id==='home'){stats();renderFulfillment()}}
 document.querySelectorAll('[data-target]').forEach(b=>b.onclick=()=>go(b.dataset.target));
 async function status(){
  const pill=document.getElementById('aiPill'),stat=document.getElementById('sAI');
@@ -198,13 +211,20 @@ async function status(){
  }
 }
 function stats(){
- sImages.textContent=state.images.length;sDrafts.textContent=state.drafts.length;sInventory.textContent=state.inventory.length;
- if(document.getElementById('navImageBadge')){navImageBadge.textContent=state.images.length;navImageBadge.style.display=state.images.length?'inline-grid':'none'}
- if(document.getElementById('navDraftBadge')){navDraftBadge.textContent=state.drafts.length;navDraftBadge.style.display=state.drafts.length?'inline-grid':'none'}
- if(document.getElementById('nextAction')){
-   if(state.drafts.length)nextAction.innerHTML=`<div class="eyebrow">Next up</div><b>${state.drafts.length} card${state.drafts.length===1?'':'s'} need review</b><div class="tiny muted" style="margin-top:4px">Confirm identification, condition and market data.</div><button class="btn primary" onclick="go('drafts')">Review cards</button>`;
-   else if(state.images.length)nextAction.innerHTML=`<div class="eyebrow">Next up</div><b>${state.images.length} scan pair${state.images.length===1?'':'s'} ready to identify</b><div class="tiny muted" style="margin-top:4px">Select the batch and run AI identification.</div><button class="btn primary" onclick="go('images')">Identify cards</button>`;
-   else nextAction.innerHTML=`<div class="eyebrow">Ready</div><b>Add a scan batch</b><div class="tiny muted" style="margin-top:4px">Import your own front/back pair or load demo cards.</div><button class="btn primary" onclick="go('scan')">Add scans</button>`;
+ const sImagesEl=document.getElementById('sImages'),sDraftsEl=document.getElementById('sDrafts'),sInventoryEl=document.getElementById('sInventory'),sFulfillEl=document.getElementById('sFulfill');
+ const imageBadge=document.getElementById('navImageBadge'),draftBadge=document.getElementById('navDraftBadge'),next=document.getElementById('nextAction');
+ const pendingFulfill=activeOrders().length;
+ if(sImagesEl)sImagesEl.textContent=state.images.length;
+ if(sDraftsEl)sDraftsEl.textContent=state.drafts.length;
+ if(sInventoryEl)sInventoryEl.textContent=state.inventory.length;
+ if(sFulfillEl)sFulfillEl.textContent=pendingFulfill;
+ if(imageBadge){imageBadge.textContent=state.images.length;imageBadge.style.display=state.images.length?'inline-grid':'none'}
+ if(draftBadge){draftBadge.textContent=state.drafts.length;draftBadge.style.display=state.drafts.length?'inline-grid':'none'}
+ if(next){
+   if(pendingFulfill)next.innerHTML=`<div class="eyebrow">Next up</div><b>${pendingFulfill} order${pendingFulfill===1?'':'s'} need fulfillment</b><div class="tiny muted" style="margin-top:4px">Pick, pack and ship sold cards from their storage locations.</div><button class="btn primary" onclick="document.getElementById('fulfillmentPanel')?.scrollIntoView({behavior:'smooth'})">Open orders</button>`;
+   else if(state.drafts.length)next.innerHTML=`<div class="eyebrow">Next up</div><b>${state.drafts.length} card${state.drafts.length===1?'':'s'} need review</b><div class="tiny muted" style="margin-top:4px">Confirm identification, condition and market data.</div><button class="btn primary" onclick="go('drafts')">Review cards</button>`;
+   else if(state.images.length)next.innerHTML=`<div class="eyebrow">Next up</div><b>${state.images.length} scan pair${state.images.length===1?'':'s'} ready to identify</b><div class="tiny muted" style="margin-top:4px">Select the batch and run AI identification.</div><button class="btn primary" onclick="go('images')">Identify cards</button>`;
+   else next.innerHTML=`<div class="eyebrow">Ready</div><b>Add a scan batch</b><div class="tiny muted" style="margin-top:4px">Import your own front/back pair or load demo cards.</div><button class="btn primary" onclick="go('scan')">Add scans</button>`;
  }
 }
 
@@ -222,6 +242,31 @@ async function apiJson(url,options){
 }
 
 function uid(){return 'CV-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,6)}
+function orderId(){return 'ORD-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,5).toUpperCase()}
+function event(c,type,detail){
+ c.events=c.events||[];
+ c.events.unshift({id:uid(),type,detail,at:new Date().toISOString()});
+}
+function activeOrders(){return (state.orders||[]).filter(o=>!['Shipped','Canceled','Bundled'].includes(o.status))}
+function cardOrder(cardId){return activeOrders().find(o=>(o.items||[]).some(it=>it.cardId===cardId))}
+function itemStatus(c){
+ if(c.fulfillmentStatus==='Shipped'||c.status==='Shipped')return 'Shipped';
+ if(c.saleStatus==='Sold'||c.status==='Sold')return 'Sold';
+ return 'Available';
+}
+function listingClass(status){
+ if(status==='Listed')return 'good';
+ if(status==='Sold')return 'sold';
+ if(String(status||'').includes('pending'))return 'warn';
+ return '';
+}
+function packageFor(shipping){
+ const s=String(shipping||'').toLowerCase();
+ if(s.includes('bmwt'))return 'Bubble mailer with tracking';
+ if(s.includes('free'))return 'Seller selected';
+ if(s.includes('calculated'))return 'Calculated package';
+ return 'Plain white envelope';
+}
 function simulate(){
  const CONDITION_POOL=[{front:'https://i.ebayimg.com/images/g/SHUAAOSwKy1gBMIj/s-l1600.webp',back:'https://i.ebayimg.com/images/g/tTsAAOSwIgdgBMIk/s-l1600.webp'},{front:'https://i.ebayimg.com/images/g/AbwAAeSw5GhotgSe/s-l1600.webp',back:'https://i.ebayimg.com/images/g/PVcAAeSwaNVotgSw/s-l1600.webp'},{front:'https://i.ebayimg.com/images/g/8IAAAeSwgIdpJy5y/s-l1600.webp',back:'https://i.ebayimg.com/images/g/7gQAAeSwbKppJy5x/s-l1600.webp'},{front:'https://i.ebayimg.com/images/g/0DgAAeSwTHlpUwmV/s-l1600.webp',back:'https://i.ebayimg.com/images/g/4BUAAeSwx99pUwmV/s-l1600.webp'}];
  const n=+simCount.value;
@@ -404,7 +449,7 @@ function renderDraftMarkets(){
  const c=current();
  if(document.getElementById('draftMarkets'))draftMarkets.innerHTML=marketsHtml(c?.pricing);
 }
-function confirmDraft(){const c=current();if(!c)return;c.identification.name=dName.value.trim()||c.identification.name;c.group=dGroup.value;c.sku=uid().toUpperCase();c.status='Inventory';state.inventory.unshift(c);state.drafts.splice(draftIndex,1);if(draftIndex>=state.drafts.length)draftIndex=Math.max(0,state.drafts.length-1);save();renderDraft();toast('Confirmed to inventory')}
+function confirmDraft(){const c=current();if(!c)return;c.identification.name=dName.value.trim()||c.identification.name;c.group=dGroup.value;c.sku=uid().toUpperCase();c.status='Inventory';c.saleStatus='Available';c.fulfillmentStatus='Available';event(c,'inventory_added','Confirmed into sellable inventory');state.inventory.unshift(c);state.drafts.splice(draftIndex,1);if(draftIndex>=state.drafts.length)draftIndex=Math.max(0,state.drafts.length-1);save();renderDraft();toast('Confirmed to inventory')}
 let invFilter='all';
 function setInvFilter(f,el){invFilter=f;document.querySelectorAll('[data-ifilter]').forEach(b=>b.classList.toggle('active',b===el));renderInventory()}
 function cardDisplayValue(c){
@@ -416,15 +461,20 @@ function renderInventory(){
  const q=(document.getElementById('invSearch')?.value||'').toLowerCase().trim();
  let rows=state.inventory.map((c,idx)=>({c,idx})).filter(({c})=>{
    const listed=(c.listings||[]).some(x=>x.status==='Listed');
+   const sold=itemStatus(c)!=='Available';
    if(invFilter==='listed'&&!listed)return false;
    if(invFilter==='unlisted'&&listed)return false;
+   if(invFilter==='sold'&&!sold)return false;
    if(invFilter==='research'&&c.group!=='Needs Research')return false;
-   const blob=[c.identification?.name,c.identification?.set_name,c.identification?.collector_number,c.sku,c.group].join(' ').toLowerCase();
+   const blob=[c.identification?.name,c.identification?.set_name,c.identification?.collector_number,c.sku,c.group,c.location,itemStatus(c)].join(' ').toLowerCase();
    return !q||blob.includes(q);
  });
  inventoryList.innerHTML=rows.length?rows.map(({c,idx})=>{
    const listed=(c.listings||[]).some(x=>x.status==='Listed');
-   return `<div class="invCard clickable" onclick="openManager(${idx})"><img src="${c.front}"><div><h3>${esc(c.identification.name)}</h3><div class="meta">${esc(c.identification.set_name)} · ${esc(c.identification.collector_number)}</div><div class="meta">${esc(c.group)} · ${esc(c.sku||'No SKU')}</div><div class="value">${cardDisplayValue(c)}</div></div><div><span class="status ${listed?'good':''}">${listed?'Listed':'Unlisted'}</span><div class="chev">›</div></div></div>`
+   const status=itemStatus(c);
+   const cls=status==='Available'?(listed?'good':''):status==='Sold'?'sold':'hold';
+   const label=status==='Available'?(listed?'Listed':'Unlisted'):status;
+   return `<div class="invCard clickable" onclick="openManager(${idx})"><img src="${c.front}"><div><h3>${esc(c.identification.name)}</h3><div class="meta">${esc(c.identification.set_name)} · ${esc(c.identification.collector_number)}</div><div class="meta">${esc(c.group)} · ${esc(c.sku||'No SKU')}</div><div class="meta">${esc(c.location||'No location assigned')}</div><div class="value">${cardDisplayValue(c)}</div></div><div><span class="status ${cls}">${label}</span><div class="chev">›</div></div></div>`
  }).join(''):`<div class="empty"><b>${state.inventory.length?'No matches':'Inventory is empty'}</b>${state.inventory.length?'Try another search or filter.':'Confirm reviewed cards to add them here.'}</div>`;
 }
 function fileData(f){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)})}
@@ -443,14 +493,16 @@ function openManager(idx){
  mTitle.value=c.listingTitle||`${i.name} ${i.collector_number} ${i.set_name} Pokemon Card ${i.variant||''}`.replace(/\s+/g,' ').trim();
  mDesc.value=c.listingDescription||`Front and back images shown. Condition: ${c.condition}. Please review images for exact condition.`;
  mAsk.value=c.ask;mShipping.value=c.shipping;mEbay.checked=c.ebay!==false;mTcg.checked=c.tcg!==false;
- mMarkets.innerHTML=marketsHtml(c.pricing);renderManagerListings();manager.classList.add('show');
+ mMarkets.innerHTML=marketsHtml(c.pricing);renderManagerListings();renderManagerFulfillment();renderTimeline();manager.classList.add('show');
 }
 function closeManager(){manager.classList.remove('show');managerIndex=-1;renderInventory()}
 function saveManager(){
  const c=state.inventory[managerIndex];if(!c)return;
  c.sku=mSku.value;c.group=mGroup.value;c.location=mLocation.value;c.quantity=+mQty.value||1;c.cost=mCost.value;c.condition=mCondition.value;c.notes=mNotes.value;
  c.listingTitle=mTitle.value;c.listingDescription=mDesc.value;c.ask=mAsk.value;c.shipping=mShipping.value;c.ebay=mEbay.checked;c.tcg=mTcg.checked;
- save();toast('Inventory item saved');renderInventory();
+ const order=cardOrder(c.id);
+ if(order){order.shippingProfile=c.shipping;order.packageType=packageFor(c.shipping);(order.items||[]).forEach(it=>{if(it.cardId===c.id){it.location=c.location;it.sku=c.sku}})}
+ save();toast('Inventory item saved');renderInventory();renderManagerFulfillment();
 }
 async function marketLookupManager(){
  const c=state.inventory[managerIndex];if(!c)return;
@@ -459,14 +511,86 @@ async function marketLookupManager(){
 }
 function simulateListing(platform){
  const c=state.inventory[managerIndex];if(!c)return;saveManager();
+ if(itemStatus(c)!=='Available')return toast('Sold items cannot be listed');
  const listing={id:'SIM-'+Date.now().toString(36).toUpperCase(),platform,status:'Listed',title:c.listingTitle,price:Number(c.ask||0),quantity:c.quantity,shipping:c.shipping,created:new Date().toISOString()};
- c.listings=c.listings||[];c.listings.unshift(listing);save();renderManagerListings();toast(`${platform} listing simulated`);
+ c.listings=c.listings||[];c.listings.unshift(listing);event(c,'listed',`${platform} listing ${listing.id} created`);save();renderManagerListings();renderTimeline();toast(`${platform} listing simulated`);
 }
 function renderManagerListings(){
  const c=state.inventory[managerIndex];if(!c)return;
- mListings.innerHTML=(c.listings||[]).length?`<h3 style="margin-top:14px">Listing records</h3>`+(c.listings||[]).map(x=>`<div class="listingCard"><div class="row space"><b>${esc(x.platform)}</b><span class="status good">${esc(x.status)}</span></div><div>${esc(x.title)}</div><div class="tiny muted">$${Number(x.price||0).toFixed(2)} • ${esc(x.shipping)} • ${esc(x.id)}</div><button class="btn ghost" style="margin-top:7px" onclick="endListing('${x.id}')">Simulate End Listing</button></div>`).join(''):'';
+ mListings.innerHTML=(c.listings||[]).length?`<h3 style="margin-top:14px">Listing records</h3>`+(c.listings||[]).map(x=>{
+   const active=x.status==='Listed'&&itemStatus(c)==='Available';
+   return `<div class="listingCard"><div class="row space"><b>${esc(x.platform)}</b><span class="status ${listingClass(x.status)}">${esc(x.status)}</span></div><div>${esc(x.title)}</div><div class="tiny muted">$${Number(x.price||0).toFixed(2)} • ${esc(x.shipping)} • ${esc(x.id)}</div><div class="row" style="margin-top:7px"><button class="btn ghost" style="flex:1" onclick="endListing('${x.id}')" ${x.status!=='Listed'?'disabled':''}>End</button><button class="btn good" style="flex:1" onclick="simulateSale('${x.id}')" ${!active?'disabled':''}>Simulate Sale</button></div></div>`
+ }).join(''):'';
 }
-function endListing(id){const c=state.inventory[managerIndex];const x=(c.listings||[]).find(y=>y.id===id);if(x)x.status='Ended';save();renderManagerListings();renderInventory()}
+function endListing(id){const c=state.inventory[managerIndex];const x=(c.listings||[]).find(y=>y.id===id);if(x){x.status='Ended';x.ended=new Date().toISOString();event(c,'listing_ended',`${x.platform} listing ${x.id} ended`)}save();renderManagerListings();renderInventory();renderTimeline()}
+function simulateSale(listingId){
+ const c=state.inventory[managerIndex];if(!c)return;
+ const listing=(c.listings||[]).find(x=>x.id===listingId);
+ if(!listing||listing.status!=='Listed')return toast('Choose an active listing');
+ const now=new Date().toISOString();
+ const sale={id:uid(),cardId:c.id,sku:c.sku,listingId:listing.id,platform:listing.platform,price:Number(listing.price||c.ask||0),quantity:1,buyer:'Simulated Buyer',soldAt:now,status:'Sold'};
+ const order={id:orderId(),saleId:sale.id,buyer:sale.buyer,platform:listing.platform,status:'Pick',created:now,shippingProfile:c.shipping,packageType:packageFor(c.shipping),items:[{cardId:c.id,sku:c.sku,name:c.identification?.name,location:c.location||'',listingId:listing.id,price:sale.price}]};
+ listing.status='Sold';listing.soldAt=now;
+ (c.listings||[]).forEach(x=>{if(x.id!==listing.id&&x.status==='Listed'){x.status='Delisted after sale';x.ended=now;x.delistReason=`Sold on ${listing.platform}`}});
+ c.saleStatus='Sold';c.fulfillmentStatus='Pick';c.status='Sold';c.reservedBy=order.id;
+ state.sales.unshift(sale);state.orders.unshift(order);state.reservations.unshift({id:uid(),cardId:c.id,orderId:order.id,status:'Reserved',created:now});
+ event(c,'sold',`Sold on ${listing.platform} and reserved for ${order.id}`);
+ event(c,'delist_sync','Other active simulated listings were delisted');
+ save();renderManagerListings();renderManagerFulfillment();renderTimeline();renderInventory();toast('Sale simulated and other listings delisted');
+}
+function updateOrder(orderId,status){
+ const order=(state.orders||[]).find(o=>o.id===orderId);if(!order)return;
+ order.status=status;order.updated=new Date().toISOString();
+ (order.items||[]).forEach(it=>{
+   const c=state.inventory.find(x=>x.id===it.cardId);
+   if(c){c.fulfillmentStatus=status;c.status=status==='Shipped'?'Shipped':'Sold';event(c,'fulfillment',`${order.id} marked ${status}`)}
+ });
+ if(status==='Shipped'){
+   (state.reservations||[]).filter(r=>r.orderId===orderId).forEach(r=>r.status='Released');
+ }
+ save();renderFulfillment();renderManagerFulfillment();renderTimeline();renderInventory();toast(`Order marked ${status}`);
+}
+function bundleOrders(){
+ const groups={};
+ activeOrders().filter(o=>o.status==='Pick').forEach(o=>{
+   const key=(o.buyer||'Unknown Buyer').toLowerCase();
+   groups[key]=groups[key]||[];groups[key].push(o);
+ });
+ const group=Object.values(groups).find(g=>g.length>1);
+ if(!group)return toast('No compatible pick-stage orders to bundle');
+ const now=new Date().toISOString(),primary=group[0],others=group.slice(1);
+ primary.items=[...(primary.items||[]),...others.flatMap(o=>o.items||[])];
+ primary.saleIds=[primary.saleId,...others.map(o=>o.saleId)].filter(Boolean);
+ primary.platform=[...new Set(group.map(o=>o.platform))].length>1?'Mixed platforms':primary.platform;
+ primary.packageType=primary.items.length>1?'Combined card package':primary.packageType;
+ primary.updated=now;primary.bundleIds=others.map(o=>o.id);
+ others.forEach(o=>{o.status='Bundled';o.bundledInto=primary.id;o.updated=now;(o.items||[]).forEach(it=>{const r=(state.reservations||[]).find(x=>x.cardId===it.cardId);if(r)r.orderId=primary.id;const c=state.inventory.find(x=>x.id===it.cardId);if(c){c.reservedBy=primary.id;event(c,'bundled',`${o.id} bundled into ${primary.id}`)}})});
+ save();toast(`Bundled ${group.length} orders`);
+}
+function renderFulfillment(){
+ const list=document.getElementById('fulfillmentList'),count=document.getElementById('fulfillCount');
+ if(!list)return;
+ const orders=activeOrders();
+ if(count)count.textContent=orders.length?`${orders.length} open`:'Clear';
+ list.innerHTML=orders.length?orders.map(o=>{
+   const items=o.items||[],item=items[0]||{};
+   const next=o.status==='Pick'?'Packed':o.status==='Packed'?'Shipped':'Shipped';
+   return `<div class="fulfillCard"><div class="row space"><div><b>${esc(o.id)}</b><div class="tiny muted">${esc(o.platform)} • ${esc(o.packageType)}</div></div><span class="status warn">${esc(o.status)}</span></div><div style="margin-top:7px">${items.length} item${items.length===1?'':'s'} for ${esc(o.buyer||'Buyer')}</div><div class="tiny muted">${items.map(it=>`Pick ${esc(it.sku||'No SKU')} from ${esc(it.location||'No location assigned')}`).join('<br>')}</div><div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" onclick="go('inventory');openCardById('${esc(item.cardId||'')}')">Open card</button><button class="btn primary" style="flex:1" onclick="updateOrder('${esc(o.id)}','${next}')">Mark ${next}</button></div></div>`
+ }).join(''):`<div class="empty"><b>No orders to ship</b>Simulated sales will appear here with pick location, package type and delist status.</div>`;
+}
+function renderManagerFulfillment(){
+ const c=state.inventory[managerIndex];if(!c||!document.getElementById('mFulfillment'))return;
+ const order=cardOrder(c.id),badge=document.getElementById('mFulfillmentStatus');
+ const status=itemStatus(c);
+ if(badge){badge.textContent=status;badge.className=`status ${status==='Available'?'':status==='Sold'?'sold':'hold'}`}
+ mFulfillment.innerHTML=order?`<div class="fulfillCard"><b>${esc(order.id)}</b><div class="tiny muted">${esc(order.platform)} • ${esc(order.packageType)} • ${(order.items||[]).length} item${(order.items||[]).length===1?'':'s'}</div><div style="margin-top:6px">Pick from ${esc((order.items||[]).find(it=>it.cardId===c.id)?.location||c.location||'No location assigned')}</div><div class="row" style="margin-top:8px"><button class="btn ghost" style="flex:1" onclick="updateOrder('${order.id}','Packed')" ${order.status!=='Pick'?'disabled':''}>Picked</button><button class="btn primary" style="flex:1" onclick="updateOrder('${order.id}','Shipped')" ${order.status==='Shipped'?'disabled':''}>Shipped</button></div></div>`:`<div class="tiny muted">No open fulfillment task for this card. Simulate a sale from an active listing to create one.</div>`;
+}
+function renderTimeline(){
+ const c=state.inventory[managerIndex];if(!c||!document.getElementById('mTimeline'))return;
+ const events=c.events||[];
+ mTimeline.innerHTML=events.length?events.slice(0,12).map(e=>`<div class="event"><b>${esc(e.type.replace(/_/g,' '))}</b><span class="tiny muted">${new Date(e.at).toLocaleString()} • ${esc(e.detail)}</span></div>`).join(''):`<div class="tiny muted">No item events yet.</div>`;
+}
+function openCardById(id){const idx=state.inventory.findIndex(c=>c.id===id);if(idx>=0)openManager(idx)}
 function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-stats();status();renderInventory();
+stats();status();renderInventory();renderFulfillment();
 </script></body></html>
